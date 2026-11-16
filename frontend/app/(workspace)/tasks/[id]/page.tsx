@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useRef, useState, type ClipboardEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -121,7 +121,12 @@ export default function TaskDetailsPage() {
   const [commentImage, setCommentImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isPreparingImage, setIsPreparingImage] = useState(false);
+  const [selectedCommentImage, setSelectedCommentImage] = useState<{
+    src: string;
+    alt: string;
+  } | null>(null);
   const imagePasteRequestId = useRef(0);
+  const imageDialogRef = useRef<HTMLDialogElement>(null);
   const taskQuery = useQuery({
     queryKey: ["task", id],
     queryFn: () => apiFetch<Task>(`/tasks/${id}`),
@@ -143,6 +148,15 @@ export default function TaskDetailsPage() {
     formState: { errors },
   } = useForm<CommentValues>({ resolver: zodResolver(commentSchema) });
   const commentField = register("content");
+
+  useEffect(() => {
+    if (!selectedCommentImage) return;
+    const dialog = imageDialogRef.current;
+    if (!dialog) return;
+
+    dialog.showModal();
+    return () => dialog.close();
+  }, [selectedCommentImage]);
 
   const updateTask = useMutation({
     mutationFn: (
@@ -422,11 +436,18 @@ export default function TaskDetailsPage() {
                         </div>
                         <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted">{comment.content}</p>
                         {comment.imageData ? (
-                          <a
-                            className="mt-3 block w-fit max-w-full overflow-hidden rounded-xl border border-border bg-surface-secondary p-2"
-                            href={comment.imageData}
-                            rel="noreferrer"
-                            target="_blank"
+                          <button
+                            aria-label={`View screenshot attached to comment by ${comment.user.name}`}
+                            className="mt-3 block w-fit max-w-full overflow-hidden rounded-xl border border-border bg-surface-secondary p-2 text-left"
+                            onClick={() => {
+                              const imageData = comment.imageData;
+                              if (!imageData) return;
+                              setSelectedCommentImage({
+                                src: imageData,
+                                alt: `Screenshot attached to comment by ${comment.user.name}`,
+                              });
+                            }}
+                            type="button"
                           >
                             <img
                               alt={`Screenshot attached to comment by ${comment.user.name}`}
@@ -435,7 +456,7 @@ export default function TaskDetailsPage() {
                               loading="lazy"
                               src={comment.imageData}
                             />
-                          </a>
+                          </button>
                         ) : null}
                       </div>
                     </article>
@@ -551,6 +572,37 @@ export default function TaskDetailsPage() {
         pendingLabel="Deleting…"
         title={confirmation?.title ?? ""}
       />
+      {selectedCommentImage ? (
+        <dialog
+          aria-label="Screenshot viewer"
+          className="fixed left-0 top-0 m-0 h-dvh w-screen max-h-none max-w-none overflow-hidden border-0 bg-transparent p-0 text-foreground backdrop:bg-black/85"
+          onCancel={() => setSelectedCommentImage(null)}
+          ref={imageDialogRef}
+        >
+          <div
+            className="relative grid h-full w-full place-items-center p-4"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) setSelectedCommentImage(null);
+            }}
+          >
+            <Button
+              aria-label="Close screenshot"
+              autoFocus
+              className="absolute right-4 top-4 z-10 size-10 rounded-full bg-black/60 p-0 text-white hover:bg-black/80 hover:text-white"
+              onClick={() => setSelectedCommentImage(null)}
+              size="icon"
+              variant="ghost"
+            >
+              <X aria-hidden="true" size={20} />
+            </Button>
+            <img
+              alt={selectedCommentImage.alt}
+              className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] rounded-lg object-contain"
+              src={selectedCommentImage.src}
+            />
+          </div>
+        </dialog>
+      ) : null}
     </div>
   );
 }
