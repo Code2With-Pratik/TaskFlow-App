@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import type { CorsOptions } from 'cors';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
+import express from 'express';
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from '../common/filters/all-exceptions.filter.js';
@@ -12,8 +13,8 @@ export function configureApp(
   config: ConfigService,
 ): void {
   app.use(cookieParser());
-  app.useBodyParser('json', { limit: '2mb' });
-  app.useBodyParser('urlencoded', { extended: true, limit: '2mb' });
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
   // Frontend URLs allowed to access the backend
   const frontendUrls = config

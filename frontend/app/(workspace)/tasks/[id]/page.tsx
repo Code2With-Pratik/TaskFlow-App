@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Comment screenshots are compressed inline data URLs. */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -12,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, type ClipboardEvent } from "react";
+import { useRef, useState, type ClipboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -119,6 +121,7 @@ export default function TaskDetailsPage() {
   const [commentImage, setCommentImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isPreparingImage, setIsPreparingImage] = useState(false);
+  const imagePasteRequestId = useRef(0);
   const taskQuery = useQuery({
     queryKey: ["task", id],
     queryFn: () => apiFetch<Task>(`/tasks/${id}`),
@@ -186,30 +189,36 @@ export default function TaskDetailsPage() {
     );
     if (!imageItems.length) return;
 
+    const requestId = ++imagePasteRequestId.current;
     event.preventDefault();
     const item = imageItems[0];
     if (!SUPPORTED_IMAGE_TYPES.has(item.type)) {
       setImageError("That image type is not supported. Paste a PNG, JPEG, or WebP screenshot.");
+      setIsPreparingImage(false);
       return;
     }
     const file = item.getAsFile();
     if (!file) {
       setImageError("The clipboard image could not be read. Copy it again and try once more.");
+      setIsPreparingImage(false);
       return;
     }
 
     setImageError(null);
     setIsPreparingImage(true);
     try {
-      setCommentImage(await compressClipboardImage(file));
+      const imageData = await compressClipboardImage(file);
+      if (requestId === imagePasteRequestId.current) setCommentImage(imageData);
     } catch (error) {
-      setImageError(
-        error instanceof Error
-          ? error.message
-          : "The screenshot could not be prepared. Try copying it again.",
-      );
+      if (requestId === imagePasteRequestId.current) {
+        setImageError(
+          error instanceof Error
+            ? error.message
+            : "The screenshot could not be prepared. Try copying it again.",
+        );
+      }
     } finally {
-      setIsPreparingImage(false);
+      if (requestId === imagePasteRequestId.current) setIsPreparingImage(false);
     }
   };
   const deleteTask = useMutation({
