@@ -190,7 +190,7 @@ export default function ProjectDetailsPage() {
         title={project.name}
         description={project.description || "A focused space for your team's work."}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
             {!isOwner && currentMembership ? (
               <Button
                 variant="danger"
@@ -347,7 +347,7 @@ export default function ProjectDetailsPage() {
             <CardContent className="pt-3">
               <div className="space-y-1">
                 {members.map((member) => (
-                  <div key={member.id} className="flex items-center gap-3 rounded-xl px-2 py-2">
+                  <div key={member.id} className="flex flex-wrap items-center gap-2 rounded-xl px-2 py-2">
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand/10 text-[10px] font-semibold text-brand">
                       {initials(member.user.name)}
                     </span>
@@ -359,7 +359,7 @@ export default function ProjectDetailsPage() {
                     {isOwner && member.role !== "OWNER" ? (
                       <select
                         aria-label={`Role for ${member.user.name}`}
-                        className="h-8 rounded-lg border border-border bg-surface px-2 text-[10px] text-muted outline-none focus:border-brand"
+                        className="h-9 rounded-lg border border-border bg-surface px-2 text-[10px] text-muted outline-none focus:border-brand"
                         value={member.role}
                         disabled={updateMemberRole.isPending}
                         onChange={(event) =>
@@ -376,7 +376,7 @@ export default function ProjectDetailsPage() {
                     {member.role !== "OWNER" && (isOwner || (canManage && member.role === "MEMBER")) ? (
                       <button
                         aria-label={`Remove ${member.user.name}`}
-                        className="glass-interactive grid size-8 place-items-center rounded-lg bg-danger-action text-black hover:bg-red-700 focus-visible:outline"
+                        className="glass-interactive grid size-9 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-700 focus-visible:outline"
                         disabled={removeMember.isPending}
                         onClick={() => {
                           if (window.confirm(`Remove ${member.user.name} from this project?`)) {

@@ -45,6 +45,10 @@ The light and dark CSS variables in `app/globals.css` implement the TaskFlow
 palette. The theme choice is stored locally as a display preference, not as
 authentication data.
 
+The workspace adapts its layouts and dialogs to narrow screens. Scrollbar
+visuals are hidden, while native touch, wheel, and keyboard scrolling remains
+available in the page, task filters, menus, and dialogs.
+
 ## Checks
 
 ```powershell

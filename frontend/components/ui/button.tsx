@@ -13,7 +13,7 @@ const buttonStyles = cva(
           "primary-action bg-black text-white hover:bg-neutral-800 active:bg-neutral-900",
         ghost: "text-muted hover:bg-surface-secondary hover:text-foreground",
         danger:
-          "bg-danger-action text-black hover:bg-red-700 active:bg-red-800",
+          "bg-danger-action text-white hover:bg-red-700 active:bg-red-800",
       },
       size: {
         sm: "h-9 px-3 text-xs",

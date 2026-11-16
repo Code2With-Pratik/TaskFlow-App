@@ -103,7 +103,7 @@ export default function ProjectsPage() {
                 <p className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-muted">
                   {project.description || "A focused space for your team's work."}
                 </p>
-                <div className="mt-5 flex items-center gap-4 border-t border-border pt-4 text-xs text-muted">
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-4 text-xs text-muted">
                   <span className="inline-flex items-center gap-1.5">
                     <FolderKanban size={14} />
                     {project._count?.tasks ?? 0} tasks
@@ -135,7 +135,7 @@ export default function ProjectsPage() {
 
       {dialogOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
+          className="modal-overlay scrollbar-hidden fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/55 p-3 sm:items-center sm:p-4"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setDialogOpen(false);
           }}
@@ -143,8 +143,9 @@ export default function ProjectsPage() {
           <section
             aria-labelledby="create-project-title"
             aria-modal="true"
-            className="w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl"
+            className="modal-scroll scrollbar-hidden my-auto w-full max-w-lg rounded-2xl border border-border bg-surface p-4 shadow-2xl sm:p-6"
             role="dialog"
+            tabIndex={0}
           >
             <h2
               className="text-lg font-semibold text-foreground"

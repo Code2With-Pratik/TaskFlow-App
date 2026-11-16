@@ -324,7 +324,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   id="notification-preview"
                   aria-labelledby="notification-preview-title"
                   aria-busy={notificationsQuery.isLoading || markNotificationRead.isPending}
-                  className="glass-panel absolute right-0 top-full z-30 mt-2 flex max-h-[min(34rem,calc(100vh-6rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-glass-edge shadow-2xl shadow-black/15 sm:w-96"
+                  className="glass-panel notification-popover absolute right-0 top-full z-30 mt-2 flex flex-col overflow-hidden rounded-2xl border border-glass-edge shadow-2xl shadow-black/15"
                   role="dialog"
                 >
                   <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3.5">
@@ -344,7 +344,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="size-8"
+                      className="size-10"
                       aria-label="Close notifications"
                       onClick={() => {
                         setNotificationOpen(false);
@@ -361,7 +361,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </p>
                   ) : null}
 
-                  <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                  <div
+                    className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto p-2"
+                    role="region"
+                    aria-label="Recent notifications"
+                    tabIndex={0}
+                  >
                     {notificationsQuery.isLoading ? (
                       <p className="px-3 py-8 text-center text-sm text-muted" role="status">
                         Loading notifications…
@@ -481,7 +486,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {profileOpen ? (
                 <div
                   id="profile-menu"
-                  className="glass-panel absolute right-0 mt-2 w-56 rounded-2xl border border-glass-edge p-1.5 shadow-xl"
+                  className="glass-panel absolute right-0 mt-2 w-36 rounded-2xl border border-glass-edge p-1.5 shadow-xl"
                   role="menu"
                   aria-label="Profile"
                   onKeyDown={(event) => {

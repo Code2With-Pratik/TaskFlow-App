@@ -161,7 +161,7 @@ export default function ProjectBoardPage() {
           {actionError}
         </p>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {columns.map((column) => {
           const columnTasks = tasks.filter((task) => task.status === column.status);
           return (
@@ -197,12 +197,12 @@ export default function ProjectBoardPage() {
                       event.dataTransfer.effectAllowed = "move";
                       event.dataTransfer.setData("text/taskflow-task", task.id);
                     }}
-                    className="cursor-grab p-4 active:cursor-grabbing"
+                    className="glass-interactive cursor-grab p-4 active:cursor-grabbing"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <Link
                         href={`/tasks/${task.id}`}
-                        className="line-clamp-2 text-sm font-medium leading-5 text-foreground hover:text-brand"
+                        className="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-5 text-foreground hover:text-brand"
                       >
                         {task.title}
                       </Link>
@@ -243,7 +243,7 @@ export default function ProjectBoardPage() {
                       )}
                       <select
                         aria-label={`Status for ${task.title}`}
-                        className="h-8 max-w-32 rounded-lg border border-border bg-surface px-2 text-[10px] text-muted outline-none focus:border-brand"
+                        className="h-9 max-w-32 rounded-lg border border-border bg-surface px-2 text-[10px] text-muted outline-none focus:border-brand"
                         value={task.status}
                         disabled={updateTask.isPending}
                         onChange={(event) =>
@@ -279,7 +279,7 @@ export default function ProjectBoardPage() {
       </div>
       {dialogOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
+          className="modal-overlay scrollbar-hidden fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/55 p-3 sm:items-center sm:p-4"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setDialogOpen(false);
           }}
@@ -287,8 +287,9 @@ export default function ProjectBoardPage() {
           <section
             aria-labelledby="create-task-title"
             aria-modal="true"
-            className="w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-2xl"
+            className="modal-scroll scrollbar-hidden my-auto w-full max-w-lg rounded-2xl border border-border bg-surface p-4 shadow-2xl sm:p-6"
             role="dialog"
+            tabIndex={0}
           >
             <h2 className="text-lg font-semibold text-foreground" id="create-task-title">
               Add a task

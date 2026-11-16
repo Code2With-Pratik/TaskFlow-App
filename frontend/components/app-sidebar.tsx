@@ -82,7 +82,12 @@ export function AppSidebar({
         </nav>
       </div>
 
-      <div className="mt-8 flex-1 overflow-y-auto px-3">
+      <div
+        className="scrollbar-hidden mt-8 flex-1 overflow-y-auto px-3"
+        role="region"
+        aria-label="Project navigation list"
+        tabIndex={0}
+      >
         <div className="mb-2 flex items-center justify-between px-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
             Your projects

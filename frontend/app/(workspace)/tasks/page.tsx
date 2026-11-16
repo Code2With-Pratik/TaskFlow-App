@@ -61,12 +61,12 @@ export default function TasksPage() {
             aria-label="Search tasks"
           />
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1">
+        <div className="scrollbar-hidden flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1" role="group" aria-label="Task status filters" tabIndex={0}>
           <SlidersHorizontal className="ml-2 shrink-0 text-muted" size={15} />
           {statuses.map((item) => (
             <button
               key={item.value}
-              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition ${
+              className={`shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium transition ${
                 status === item.value
                   ? "primary-action bg-black text-white"
                   : "text-muted hover:bg-surface-secondary hover:text-foreground"
