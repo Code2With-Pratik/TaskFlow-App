@@ -48,9 +48,12 @@ npm run db:migrate:dev -- --name init
 ```
 
 The Prisma schema in `prisma/schema.prisma` contains the TaskFlow data model.
-`PrismaService` uses Prisma's PostgreSQL driver adapter and connects during
-application startup. `ConfigModule` validates the database URL, frontend
-origin, and port before Nest starts.
+`PrismaService` uses Prisma's PostgreSQL driver adapter and opens its database
+connection when a database operation first runs. `ConfigModule` validates the
+database URL, frontend origin, and port before Nest starts.
+
+The public `GET /health` endpoint returns `{ "status": "ok", "timestamp":
+"<ISO date>" }` and does not query the database.
 
 ## Authentication
 

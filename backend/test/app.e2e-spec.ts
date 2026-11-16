@@ -29,6 +29,17 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
+  it('/health (GET) does not require authentication', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect(({ body }) => {
+        expect(body.status).toBe('ok');
+        expect(new Date(body.timestamp).toISOString()).toBe(body.timestamp);
+      });
+  });
+
   it('connects to PostgreSQL', async () => {
     await expect(prisma.$queryRaw`SELECT 1`).resolves.toHaveLength(1);
   });

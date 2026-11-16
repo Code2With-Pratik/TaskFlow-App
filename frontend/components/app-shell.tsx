@@ -419,6 +419,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                 ) {
                                   markNotificationRead.mutate(notification.id);
                                 }
+                                setNotificationOpen(false);
                               }}
                               onToggleExpanded={() =>
                                 setExpandedNotifications((current) => {
@@ -587,6 +588,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Could not sign out: {signOutError}
             </p>
           ) : null}
+          {markNotificationRead.error ? (
+            <p
+              className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground"
+              role="alert"
+            >
+              Could not mark notification as read:{" "}
+              {getErrorMessage(markNotificationRead.error)}
+            </p>
+          ) : null}
           {children}
         </main>
       </div>
@@ -651,19 +661,14 @@ function NotificationPreviewRow({
         <Icon size={15} strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1">
-        {notification.isRead ? (
-          <div className="py-0.5">{notificationContent}</div>
-        ) : (
-          <button
-            type="button"
-            className="glass-interactive block w-full rounded-md py-0.5 text-left focus-visible:outline"
-            aria-label={`Mark ${notification.title} as read`}
-            disabled={isPending}
-            onClick={onActivate}
-          >
-            {notificationContent}
-          </button>
-        )}
+        <Link
+          href="/notifications"
+          className="glass-interactive block w-full rounded-md py-0.5 text-left focus-visible:outline"
+          aria-label={`Open notifications: ${notification.title}`}
+          onClick={onActivate}
+        >
+          {notificationContent}
+        </Link>
         {isLong ? (
           <button
             type="button"

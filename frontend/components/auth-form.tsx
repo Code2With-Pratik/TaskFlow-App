@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Eye, EyeOff, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth } from "@/app/auth-provider";
 import { getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useBackendHealth } from "@/hooks/use-backend-health";
 
 type AuthMode = "login" | "register";
 
@@ -29,8 +30,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const isRegister = mode === "register";
   const router = useRouter();
   const { user, isLoading, signIn, signUp } = useAuth();
+  const { status: healthStatus, error: healthError, isReady, retryConnection } =
+    useBackendHealth();
   const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const authRequestInFlight = useRef(false);
   const schema = useMemo(
     () =>
       isRegister
@@ -53,6 +57,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }, [isLoading, router, user]);
 
   async function onSubmit(values: AuthValues) {
+    if (!isReady) return;
     setFormError(null);
     try {
       if (isRegister) {
@@ -69,6 +74,27 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       setFormError(getErrorMessage(error));
     }
   }
+
+  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (!isReady || authRequestInFlight.current) {
+      event.preventDefault();
+      return;
+    }
+
+    authRequestInFlight.current = true;
+    void handleSubmit(onSubmit)(event).finally(() => {
+      authRequestInFlight.current = false;
+    });
+  }
+
+  const connectionMessage =
+    healthStatus === "ready"
+      ? "Backend connected. You can securely sign in."
+      : healthStatus === "timeout"
+        ? "The backend is still unavailable. You can try connecting again."
+        : healthStatus === "error"
+          ? "The backend is temporarily unreachable. Retrying every 4 seconds."
+          : "Connecting to the backend. Your form is ready while it wakes up.";
 
   return (
     <div className="grid min-h-screen bg-canvas lg:grid-cols-[1fr_0.9fr]">
@@ -157,7 +183,31 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-5 rounded-xl border border-border bg-surface-secondary/60 px-4 py-3 motion-safe:transition-colors motion-reduce:transition-none">
+            <p
+              className="text-sm font-medium text-foreground"
+              role="status"
+              aria-live="polite"
+            >
+              {connectionMessage}
+            </p>
+            {healthError && healthStatus !== "ready" ? (
+              <p className="mt-1 text-xs text-muted">{healthError}</p>
+            ) : null}
+            {healthStatus === "timeout" ? (
+              <Button
+                className="mt-3"
+                size="sm"
+                variant="secondary"
+                type="button"
+                onClick={retryConnection}
+              >
+                Retry connection
+              </Button>
+            ) : null}
+          </div>
+
+          <form className="space-y-5" onSubmit={handleFormSubmit}>
             {isRegister ? (
               <div>
                 <label
@@ -258,13 +308,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               </p>
             ) : null}
 
-            <Button className="w-full" size="lg" type="submit" disabled={isSubmitting}>
+            <Button
+              className="w-full"
+              size="lg"
+              type="submit"
+              disabled={!isReady || isSubmitting}
+            >
               {isSubmitting
                 ? "Please wait…"
-                : isRegister
-                  ? "Create account"
-                  : "Sign in"}
-              {!isSubmitting ? <ArrowRight size={17} /> : null}
+                : !isReady
+                  ? "Waiting for backend…"
+                  : isRegister
+                    ? "Create account"
+                    : "Sign in"}
+              {isReady && !isSubmitting ? <ArrowRight size={17} /> : null}
             </Button>
           </form>
 
