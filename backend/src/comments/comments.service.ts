@@ -35,7 +35,12 @@ export class CommentsService {
     await this.projectAccess.requireMembership(task.projectId, userId);
     const result = await this.prisma.$transaction(async (transaction) => {
       const comment = await transaction.comment.create({
-        data: { taskId, userId, content: dto.content.trim() },
+        data: {
+          taskId,
+          userId,
+          content: dto.content.trim(),
+          imageData: dto.imageData ?? null,
+        },
         include: {
           user: { select: { id: true, name: true, email: true, avatar: true } },
         },

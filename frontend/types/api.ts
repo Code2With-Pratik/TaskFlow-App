@@ -58,6 +58,7 @@ export interface Task {
 export interface Comment {
   id: string;
   content: string;
+  imageData?: string | null;
   taskId: string;
   userId: string;
   createdAt: string;

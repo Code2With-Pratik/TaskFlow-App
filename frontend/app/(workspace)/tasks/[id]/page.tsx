@@ -4,13 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   Check,
+  ImagePlus,
   MessageSquare,
   Send,
   Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ClipboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +28,7 @@ import { formatDate, fromDateInputValue, initials, toDateInputValue } from "@/li
 import type { Comment, ProjectMember, Task, TaskPriority, TaskStatus } from "@/types/api";
 
 const commentSchema = z.object({
-  content: z.string().trim().min(1, "Write a comment first").max(2000, "Comment is too long"),
+  content: z.string().trim().min(1, "Write a comment first").max(5000, "Comment is too long"),
 });
 type CommentValues = z.infer<typeof commentSchema>;
 type ConfirmationRequest = {
@@ -38,6 +40,74 @@ type ConfirmationRequest = {
 
 const statuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
 const priorities: TaskPriority[] = ["LOW", "MEDIUM", "HIGH"];
+const MAX_SOURCE_IMAGE_BYTES = 12 * 1024 * 1024;
+const MAX_COMPRESSED_IMAGE_BYTES = 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1600;
+const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
+function readBlobAsDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("The screenshot could not be read. Try copying it again."));
+    };
+    reader.onerror = () => reject(new Error("The screenshot could not be read. Try copying it again."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function compressClipboardImage(file: File): Promise<string> {
+  if (file.size > MAX_SOURCE_IMAGE_BYTES) {
+    throw new Error("This screenshot is too large to paste. Try a smaller image under 12 MB.");
+  }
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("This screenshot could not be opened. Copy it again or use a PNG, JPEG, or WebP image.");
+  }
+
+  try {
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_DIMENSION / bitmap.width,
+      MAX_IMAGE_DIMENSION / bitmap.height,
+    );
+    let width = Math.max(1, Math.round(bitmap.width * scale));
+    let height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Your browser could not prepare the screenshot. Try another image.");
+
+    for (let resizeAttempt = 0; resizeAttempt < 5; resizeAttempt += 1) {
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(bitmap, 0, 0, width, height);
+
+      for (const quality of [0.86, 0.74, 0.62, 0.5]) {
+        const compressed = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, "image/webp", quality);
+        });
+        if (!compressed) continue;
+        if (!SUPPORTED_IMAGE_TYPES.has(compressed.type)) {
+          throw new Error("Your browser could not encode this screenshot. Try a PNG or JPEG image.");
+        }
+        if (compressed.size <= MAX_COMPRESSED_IMAGE_BYTES) {
+          return readBlobAsDataUrl(compressed);
+        }
+      }
+
+      width = Math.max(1, Math.floor(width * 0.78));
+      height = Math.max(1, Math.floor(height * 0.78));
+    }
+
+    throw new Error("This screenshot is still too large after compression. Crop it or try a smaller image.");
+  } finally {
+    bitmap.close();
+  }
+}
 
 export default function TaskDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +116,9 @@ export default function TaskDetailsPage() {
   const { user } = useAuth();
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
+  const [commentImage, setCommentImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [isPreparingImage, setIsPreparingImage] = useState(false);
   const taskQuery = useQuery({
     queryKey: ["task", id],
     queryFn: () => apiFetch<Task>(`/tasks/${id}`),
@@ -66,6 +139,7 @@ export default function TaskDetailsPage() {
     reset,
     formState: { errors },
   } = useForm<CommentValues>({ resolver: zodResolver(commentSchema) });
+  const commentField = register("content");
 
   const updateTask = useMutation({
     mutationFn: (
@@ -89,18 +163,55 @@ export default function TaskDetailsPage() {
     onError: (error) => setActionError(getErrorMessage(error)),
   });
   const addComment = useMutation({
-    mutationFn: (values: CommentValues) =>
+    mutationFn: (values: CommentValues & { imageData?: string }) =>
       apiFetch<Comment>(`/tasks/${id}/comments`, {
         method: "POST",
         body: JSON.stringify(values),
       }),
     onSuccess: async () => {
       reset();
+      setCommentImage(null);
+      setImageError(null);
       await queryClient.invalidateQueries({ queryKey: ["task-comments", id] });
       await queryClient.invalidateQueries({ queryKey: ["task", id] });
     },
     onError: (error) => setActionError(getErrorMessage(error)),
   });
+
+  const handleCommentPaste = async (
+    event: ClipboardEvent<HTMLTextAreaElement>,
+  ) => {
+    const imageItems = Array.from(event.clipboardData.items).filter(
+      (item) => item.kind === "file" && item.type.startsWith("image/"),
+    );
+    if (!imageItems.length) return;
+
+    event.preventDefault();
+    const item = imageItems[0];
+    if (!SUPPORTED_IMAGE_TYPES.has(item.type)) {
+      setImageError("That image type is not supported. Paste a PNG, JPEG, or WebP screenshot.");
+      return;
+    }
+    const file = item.getAsFile();
+    if (!file) {
+      setImageError("The clipboard image could not be read. Copy it again and try once more.");
+      return;
+    }
+
+    setImageError(null);
+    setIsPreparingImage(true);
+    try {
+      setCommentImage(await compressClipboardImage(file));
+    } catch (error) {
+      setImageError(
+        error instanceof Error
+          ? error.message
+          : "The screenshot could not be prepared. Try copying it again.",
+      );
+    } finally {
+      setIsPreparingImage(false);
+    }
+  };
   const deleteTask = useMutation({
     mutationFn: () => apiFetch<void>(`/tasks/${id}`, { method: "DELETE" }),
     onSuccess: async () => {
@@ -214,20 +325,76 @@ export default function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <form
                 className="space-y-3"
-                onSubmit={handleSubmit((values) => addComment.mutate(values))}
+                onSubmit={handleSubmit((values) =>
+                  addComment.mutate({
+                    ...values,
+                    ...(commentImage ? { imageData: commentImage } : {}),
+                  }),
+                )}
               >
                 <Textarea
                   aria-label="Write a comment"
+                  aria-describedby={[
+                    "comment-paste-hint",
+                    errors.content ? "comment-content-error" : null,
+                    imageError ? "comment-image-error" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   placeholder="Share an update or ask a question…"
                   rows={3}
+                  maxLength={5000}
                   aria-invalid={Boolean(errors.content)}
-                  {...register("content")}
+                  {...commentField}
+                  onPaste={handleCommentPaste}
                 />
-                {errors.content ? <p className="text-xs text-danger-foreground">{errors.content.message}</p> : null}
+                <p className="text-xs text-muted" id="comment-paste-hint">
+                  You can also paste a screenshot.
+                </p>
+                {errors.content ? (
+                  <p className="text-xs text-danger-foreground" id="comment-content-error">
+                    {errors.content.message}
+                  </p>
+                ) : null}
+                {imageError ? (
+                  <p className="text-xs text-danger-foreground" id="comment-image-error" role="alert">
+                    {imageError}
+                  </p>
+                ) : null}
+                {isPreparingImage ? (
+                  <p className="text-xs text-muted" aria-live="polite" role="status">
+                    Preparing screenshot…
+                  </p>
+                ) : null}
+                {commentImage ? (
+                  <div className="relative w-fit max-w-full rounded-xl border border-border bg-surface-secondary p-2">
+                    <img
+                      alt="Screenshot preview for this comment"
+                      className="max-h-64 max-w-full rounded-lg object-contain"
+                      src={commentImage}
+                    />
+                    <Button
+                      aria-label="Remove attached screenshot"
+                      className="absolute right-3 top-3 size-8 rounded-full bg-surface/90 p-0 shadow-md"
+                      onClick={() => {
+                        setCommentImage(null);
+                        setImageError(null);
+                      }}
+                      type="button"
+                      variant="ghost"
+                    >
+                      <X aria-hidden="true" size={15} />
+                    </Button>
+                  </div>
+                ) : null}
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={addComment.isPending}>
-                    <Send size={14} />
-                    {addComment.isPending ? "Sending…" : "Add comment"}
+                  <Button type="submit" disabled={addComment.isPending || isPreparingImage}>
+                    {isPreparingImage ? <ImagePlus size={14} /> : <Send size={14} />}
+                    {isPreparingImage
+                      ? "Preparing screenshot…"
+                      : addComment.isPending
+                        ? "Sending…"
+                        : "Add comment"}
                   </Button>
                 </div>
               </form>
@@ -245,6 +412,22 @@ export default function TaskDetailsPage() {
                           <span className="text-[10px] text-muted">{formatDate(comment.createdAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
                         </div>
                         <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted">{comment.content}</p>
+                        {comment.imageData ? (
+                          <a
+                            className="mt-3 block w-fit max-w-full overflow-hidden rounded-xl border border-border bg-surface-secondary p-2"
+                            href={comment.imageData}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            <img
+                              alt={`Screenshot attached to comment by ${comment.user.name}`}
+                              className="max-h-96 max-w-full rounded-lg object-contain"
+                              decoding="async"
+                              loading="lazy"
+                              src={comment.imageData}
+                            />
+                          </a>
+                        ) : null}
                       </div>
                     </article>
                   ))}

@@ -12,6 +12,8 @@ export function configureApp(
   config: ConfigService,
 ): void {
   app.use(cookieParser());
+  app.useBodyParser('json', { limit: '2mb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '2mb' });
 
   // Frontend URLs allowed to access the backend
   const frontendUrls = config

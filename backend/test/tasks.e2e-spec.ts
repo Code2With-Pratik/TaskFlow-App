@@ -40,7 +40,7 @@ describe('Tasks, comments, and activity (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication({ bodyParser: false });
     configureApp(app, app.get(ConfigService));
     await app.init();
     prisma = app.get(PrismaService);
@@ -218,12 +218,32 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .expect(201);
     commentId = comment.body.id;
 
+    const imageData =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lQsAAAAASUVORK5CYII=';
+    const imageComment = await request(app.getHttpServer())
+      .post(`/tasks/${taskId}/comments`)
+      .set('Authorization', authorization('owner'))
+      .send({ content: 'Screenshot for the checklist.', imageData })
+      .expect(201);
+    expect(imageComment.body).toMatchObject({
+      content: 'Screenshot for the checklist.',
+      imageData,
+    });
+
+    await request(app.getHttpServer())
+      .post(`/tasks/${taskId}/comments`)
+      .set('Authorization', authorization('owner'))
+      .send({ content: 'Reject an arbitrary payload.', imageData: 'data:image/png;base64,SGVsbG8=' })
+      .expect(400);
+
     const comments = await request(app.getHttpServer())
       .get(`/tasks/${taskId}/comments`)
       .set('Authorization', `Bearer ${tokens.owner}`)
       .expect(200);
-    expect(comments.body).toHaveLength(1);
+    expect(comments.body).toHaveLength(2);
     expect(comments.body[0].content).toBe('I am working on this checklist.');
+    expect(comments.body[0].imageData).toBeNull();
+    expect(comments.body[1].imageData).toBe(imageData);
     expect(comments.body[0].user).not.toHaveProperty('passwordHash');
 
     const ownerNotifications = await request(app.getHttpServer())

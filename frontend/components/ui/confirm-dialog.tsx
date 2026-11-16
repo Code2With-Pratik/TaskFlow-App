@@ -35,20 +35,25 @@ export function ConfirmDialog({
   const errorId = useId();
 
   useEffect(() => {
+    if (!open) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    if (open && !dialog.open) {
+    if (!dialog.open) {
       dialog.showModal();
       cancelButtonRef.current?.focus();
-    } else if (!open && dialog.open) {
-      dialog.close();
     }
+
+    return () => {
+      if (dialog.open) dialog.close();
+    };
   }, [open]);
 
   useEffect(() => {
     if (!pending) submittedRef.current = false;
   }, [pending]);
+
+  if (!open) return null;
 
   return (
     <dialog
@@ -61,7 +66,7 @@ export function ConfirmDialog({
           .join(" ") || undefined
       }
       aria-busy={pending}
-      className="confirm-dialog m-auto flex max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-[calc(100vw-2rem-env(safe-area-inset-left)-env(safe-area-inset-right))] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-surface p-0 text-foreground shadow-2xl"
+      className="confirm-dialog fixed left-1/2 top-1/2 m-0 flex max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-[calc(100vw-2rem-env(safe-area-inset-left)-env(safe-area-inset-right))] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-surface p-0 text-foreground shadow-2xl"
       onCancel={(event) => {
         event.preventDefault();
         if (!pending) onCancel();
