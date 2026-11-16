@@ -7,11 +7,13 @@ const buttonStyles = cva(
   {
     variants: {
       variant: {
-        primary: "bg-brand text-white shadow-sm hover:brightness-95",
+        primary:
+          "primary-action bg-black text-white hover:bg-neutral-800 active:bg-neutral-900",
         secondary:
           "border border-border bg-surface text-foreground hover:bg-surface-secondary",
         ghost: "text-muted hover:bg-surface-secondary hover:text-foreground",
-        danger: "bg-danger text-white hover:brightness-95",
+        danger:
+          "bg-danger-action text-white hover:bg-red-800 active:bg-red-900",
       },
       size: {
         sm: "h-9 px-3 text-xs",

@@ -149,13 +149,16 @@ export default function TaskDetailsPage() {
           <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             {task.title}
           </h1>
+          <div className="mt-3">
+            <Badge>{task.status}</Badge>
+          </div>
           <p className="mt-2 text-sm text-muted">
             Created by {task.createdBy.name} · {formatDate(task.createdAt)}
           </p>
         </div>
         {canDelete ? (
           <Button
-            variant="secondary"
+            variant="danger"
             disabled={deleteTask.isPending}
             onClick={() => {
               if (window.confirm(`Delete "${task.title}"? This cannot be undone.`)) {

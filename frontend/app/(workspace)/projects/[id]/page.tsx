@@ -193,7 +193,7 @@ export default function ProjectDetailsPage() {
           <div className="flex items-center gap-2">
             {!isOwner && currentMembership ? (
               <Button
-                variant="secondary"
+                variant="danger"
                 disabled={removeMember.isPending}
                 onClick={() => {
                   if (window.confirm(`Leave "${project.name}"?`)) {
@@ -376,7 +376,7 @@ export default function ProjectDetailsPage() {
                     {member.role !== "OWNER" && (isOwner || (canManage && member.role === "MEMBER")) ? (
                       <button
                         aria-label={`Remove ${member.user.name}`}
-                        className="grid size-8 place-items-center rounded-lg text-muted hover:bg-danger/10 hover:text-danger"
+                        className="grid size-8 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-800"
                         disabled={removeMember.isPending}
                         onClick={() => {
                           if (window.confirm(`Remove ${member.user.name} from this project?`)) {

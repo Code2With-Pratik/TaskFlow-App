@@ -135,7 +135,7 @@ export default function ProjectsPage() {
 
       {dialogOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setDialogOpen(false);
           }}

@@ -21,9 +21,45 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## TaskFlow
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+TaskFlow is a project and task workspace with a Next.js frontend, NestJS API,
+and PostgreSQL database. The frontend is served on port `3001` and the API on
+port `3000`.
+
+## Run the full stack with Docker Compose
+
+1. Copy `.env.docker.example` to `.env.docker`.
+2. Replace the PostgreSQL password and both JWT secrets with unique random
+   values. Use hexadecimal secrets so the database URL remains valid.
+3. Build and start the complete stack:
+
+   ```powershell
+   docker compose --env-file .env.docker up --build -d
+   ```
+
+   Compose waits for PostgreSQL, applies Prisma migrations, then starts the
+   API and frontend.
+4. Open [http://localhost:3001](http://localhost:3001), register an account,
+   and sign in. The API documentation is at
+   [http://localhost:3000/api/docs](http://localhost:3000/api/docs).
+
+Useful commands:
+
+```powershell
+docker compose --env-file .env.docker logs -f
+docker compose --env-file .env.docker down
+```
+
+PostgreSQL data is stored in the `taskflow_postgres_data` volume and is
+preserved when the containers are stopped. To remove the database volume as
+well, run `docker compose --env-file .env.docker down -v`.
+
+The root `Dockerfile` builds the frontend as a minimal Next.js standalone
+image. `backend/Dockerfile` builds the API and provides a separate migration
+target used by Compose. The API and database ports are bound to loopback by
+default; adjust the compose port mappings deliberately when deploying beyond
+local development.
 
 ## Project setup
 

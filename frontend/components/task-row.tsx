@@ -17,8 +17,8 @@ export function TaskRow({ task }: { task: Task }) {
               task.status === "DONE"
                 ? "bg-success"
                 : task.status === "IN_PROGRESS"
-                  ? "bg-brand"
-                  : "bg-slate-300"
+                  ? "bg-warning"
+                  : "bg-danger"
             }`}
           />
         </span>
@@ -42,6 +42,7 @@ export function TaskRow({ task }: { task: Task }) {
             {task._count.comments}
           </span>
         ) : null}
+        <Badge>{task.status}</Badge>
         <Badge>{task.priority}</Badge>
         {task.assignee ? (
           <span

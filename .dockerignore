@@ -1,0 +1,12 @@
+.git
+.gitignore
+.vscode
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/.env*
+!.env.docker.example
+**/*.log
+**/.DS_Store

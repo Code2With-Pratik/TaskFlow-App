@@ -33,7 +33,7 @@ const statCards = [
     key: "totalTasks",
     label: "Total tasks",
     icon: ListTodo,
-    iconClass: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+    iconClass: "bg-surface-secondary text-muted",
   },
   {
     key: "completedTasks",
@@ -112,9 +112,18 @@ export default function DashboardPage() {
                 {data.stats[key]}
               </p>
               <p className="mt-1 text-[11px] text-muted">
-                {key === "totalTasks"
-                  ? `${data.stats.pendingTasks} to do · ${data.stats.inProgressTasks} in progress`
-                  : key === "completedTasks"
+                {key === "totalTasks" ? (
+                  <>
+                    <span className="font-medium text-danger">
+                      {data.stats.pendingTasks}
+                    </span>{" "}
+                    to do ·{" "}
+                    <span className="font-medium text-warning">
+                      {data.stats.inProgressTasks}
+                    </span>{" "}
+                    in progress
+                  </>
+                ) : key === "completedTasks"
                     ? "Across your workspace"
                     : key === "overdueTasks"
                       ? "Need a little attention"

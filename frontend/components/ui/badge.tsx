@@ -2,8 +2,8 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const badgeColors: Record<string, string> = {
-  TODO: "bg-surface-secondary text-muted",
-  IN_PROGRESS: "bg-brand/10 text-brand",
+  TODO: "bg-danger/10 text-danger",
+  IN_PROGRESS: "bg-warning/10 text-warning",
   DONE: "bg-success/10 text-success",
   LOW: "bg-surface-secondary text-muted",
   MEDIUM: "bg-warning/10 text-warning",
@@ -11,6 +11,12 @@ const badgeColors: Record<string, string> = {
   OWNER: "bg-brand/10 text-brand",
   ADMIN: "bg-warning/10 text-warning",
   MEMBER: "bg-surface-secondary text-muted",
+};
+
+const badgeLabels: Record<string, string> = {
+  TODO: "To do",
+  IN_PROGRESS: "In progress",
+  DONE: "Done",
 };
 
 export function Badge({
@@ -28,7 +34,7 @@ export function Badge({
       )}
       {...props}
     >
-      {children}
+      {badgeLabels[key] ?? children}
     </span>
   );
 }

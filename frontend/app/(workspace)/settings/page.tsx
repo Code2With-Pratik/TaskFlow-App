@@ -7,7 +7,7 @@ import { useTheme } from "@/app/theme-provider";
 
 const themes = [
   { value: "light", label: "Light", detail: "Bright canvas and crisp surfaces", icon: Sun },
-  { value: "dark", label: "Dark", detail: "Low-glare slate surfaces", icon: Moon },
+  { value: "dark", label: "Dark", detail: "Low-glare charcoal surfaces", icon: Moon },
 ] as const;
 
 export default function SettingsPage() {
@@ -56,10 +56,10 @@ export default function SettingsPage() {
                   </span>
                   <span
                     className={`grid size-4 place-items-center rounded-full border ${
-                      selected ? "border-brand bg-brand" : "border-border"
+                      selected ? "border-foreground bg-foreground" : "border-border"
                     }`}
                   >
-                    {selected ? <span className="size-1.5 rounded-full bg-white" /> : null}
+                    {selected ? <span className="size-1.5 rounded-full bg-canvas" /> : null}
                   </span>
                 </span>
                 <span className="mt-4 block text-sm font-semibold text-foreground">{label}</span>

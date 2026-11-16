@@ -13,11 +13,15 @@ import { PageHeading } from "@/components/ui/page-heading";
 import { apiFetch } from "@/lib/api";
 import type { PaginatedTasks, TaskStatus } from "@/types/api";
 
-const statuses: Array<{ value: TaskStatus | "ALL"; label: string }> = [
+const statuses: Array<{
+  value: TaskStatus | "ALL";
+  label: string;
+  tone?: string;
+}> = [
   { value: "ALL", label: "All tasks" },
-  { value: "TODO", label: "To do" },
-  { value: "IN_PROGRESS", label: "In progress" },
-  { value: "DONE", label: "Done" },
+  { value: "TODO", label: "To do", tone: "bg-danger" },
+  { value: "IN_PROGRESS", label: "In progress", tone: "bg-warning" },
+  { value: "DONE", label: "Done", tone: "bg-success" },
 ];
 
 export default function TasksPage() {
@@ -64,12 +68,19 @@ export default function TasksPage() {
               key={item.value}
               className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition ${
                 status === item.value
-                  ? "bg-brand text-white"
+                  ? "primary-action bg-black text-white"
                   : "text-muted hover:bg-surface-secondary hover:text-foreground"
               }`}
+              aria-pressed={status === item.value}
               onClick={() => setStatus(item.value)}
               type="button"
             >
+              {item.tone ? (
+                <span
+                  aria-hidden="true"
+                  className={`mr-1.5 inline-block size-1.5 rounded-full ${item.tone}`}
+                />
+              ) : null}
               {item.label}
             </button>
           ))}

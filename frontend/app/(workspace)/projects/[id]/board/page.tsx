@@ -20,8 +20,8 @@ import { formatDate, initials } from "@/lib/format";
 import type { PaginatedTasks, Project, ProjectMember, Task, TaskPriority, TaskStatus } from "@/types/api";
 
 const columns: Array<{ status: TaskStatus; label: string; tone: string }> = [
-  { status: "TODO", label: "To do", tone: "bg-slate-400" },
-  { status: "IN_PROGRESS", label: "In progress", tone: "bg-brand" },
+  { status: "TODO", label: "To do", tone: "bg-danger" },
+  { status: "IN_PROGRESS", label: "In progress", tone: "bg-warning" },
   { status: "DONE", label: "Done", tone: "bg-success" },
 ];
 const taskSchema = z.object({
@@ -220,7 +220,10 @@ export default function ProjectBoardPage() {
                       </p>
                     ) : null}
                     <div className="mt-4 flex items-center justify-between gap-2">
-                      <Badge>{task.priority}</Badge>
+                      <span className="flex items-center gap-2">
+                        <Badge>{task.status}</Badge>
+                        <Badge>{task.priority}</Badge>
+                      </span>
                       {task.dueDate ? (
                         <span className="flex items-center gap-1 text-[10px] text-muted">
                           <CalendarDays size={12} /> {formatDate(task.dueDate)}
@@ -276,7 +279,7 @@ export default function ProjectBoardPage() {
       </div>
       {dialogOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setDialogOpen(false);
           }}

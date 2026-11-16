@@ -45,7 +45,7 @@ export function AppSidebar({
         href="/dashboard"
         onClick={onNavigate}
       >
-        <span className="grid size-9 place-items-center rounded-xl bg-brand text-white shadow-sm">
+        <span className="grid size-9 place-items-center rounded-xl bg-black text-white shadow-sm">
           <Workflow size={19} strokeWidth={2.2} />
         </span>
         <span className="text-[17px] font-semibold tracking-tight text-foreground">

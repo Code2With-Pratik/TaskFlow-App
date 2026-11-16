@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <button
-            className="absolute inset-0 bg-slate-950/40"
+            className="absolute inset-0 bg-black/55"
             aria-label="Close navigation"
             onClick={() => setMobileMenuOpen(false)}
           />
@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Bell size={18} strokeWidth={1.8} />
               {notifications?.unreadCount ? (
-                <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-surface bg-brand" />
+                <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-surface bg-foreground" />
               ) : null}
             </Link>
 

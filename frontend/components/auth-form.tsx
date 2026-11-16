@@ -72,27 +72,27 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   return (
     <div className="grid min-h-screen bg-canvas lg:grid-cols-[1fr_0.9fr]">
-      <section className="relative hidden overflow-hidden bg-[#102343] px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between xl:px-20">
+      <section className="relative hidden overflow-hidden bg-[#090909] px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between xl:px-20">
         <div className="absolute -right-36 -top-32 size-[520px] rounded-full border border-white/[0.08]" />
         <div className="absolute -right-16 -top-12 size-[340px] rounded-full border border-white/[0.08]" />
         <Link href="/" className="relative z-10 flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-blue-500">
+          <span className="grid size-10 place-items-center rounded-xl bg-white text-black">
             <Workflow size={21} />
           </span>
           <span className="text-lg font-semibold">TaskFlow</span>
         </Link>
 
         <div className="relative z-10 max-w-xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs text-blue-100">
-            <span className="size-1.5 rounded-full bg-blue-400" />
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs text-neutral-300">
+            <span className="size-1.5 rounded-full bg-neutral-400" />
             A calmer way to move work forward
           </div>
           <h1 className="text-4xl font-semibold leading-[1.14] tracking-tight xl:text-[52px]">
             Make space for
             <br />
-            <span className="text-blue-300">meaningful work.</span>
+            <span className="text-white">meaningful work.</span>
           </h1>
-          <p className="mt-5 max-w-md text-[15px] leading-7 text-blue-100/75">
+          <p className="mt-5 max-w-md text-[15px] leading-7 text-neutral-300">
             Plan together, keep priorities clear, and see every project make
             progress — one focused task at a time.
           </p>
@@ -111,13 +111,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 { label: "Customer research", progress: "91%" },
               ].map((item) => (
                 <div key={item.label}>
-                  <div className="mb-1.5 flex justify-between text-xs text-blue-50/80">
+                  <div className="mb-1.5 flex justify-between text-xs text-neutral-300">
                     <span>{item.label}</span>
                     <span>{item.progress}</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-blue-300"
+                      className="h-full rounded-full bg-neutral-300"
                       style={{ width: item.progress }}
                     />
                   </div>
@@ -126,7 +126,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </div>
           </div>
         </div>
-        <p className="relative z-10 text-xs text-blue-100/50">
+        <p className="relative z-10 text-xs text-neutral-400">
           Thoughtful planning. Better teamwork.
         </p>
       </section>
@@ -137,7 +137,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             href="/"
             className="mb-12 inline-flex items-center gap-2.5 lg:hidden"
           >
-            <span className="grid size-9 place-items-center rounded-xl bg-brand text-white">
+            <span className="grid size-9 place-items-center rounded-xl bg-black text-white">
               <Workflow size={19} />
             </span>
             <span className="text-base font-semibold">TaskFlow</span>
