@@ -130,6 +130,7 @@ export default function ProjectDetailsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["project-members", id] });
       await queryClient.invalidateQueries({ queryKey: ["project", id] });
+      setConfirmation(null);
     },
     onError: (error) => setActionError(getErrorMessage(error)),
   });
@@ -149,6 +150,7 @@ export default function ProjectDetailsPage() {
         queryClient.invalidateQueries({ queryKey: ["projects"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
+      setConfirmation(null);
       router.replace("/projects");
     },
     onError: (error) => setActionError(getErrorMessage(error)),
@@ -204,8 +206,10 @@ export default function ProjectDetailsPage() {
                 variant="danger"
                 disabled={removeMember.isPending}
                 onClick={() => {
+                  setActionError(null);
                   setConfirmation({
                     title: `Leave "${project.name}"?`,
+                    description: `You will leave "${project.name}" and lose access to its tasks and activity.`,
                     confirmLabel: "Leave project",
                     onConfirm: () => {
                       removeMember.mutate(currentMembership.user.id, {
@@ -223,6 +227,7 @@ export default function ProjectDetailsPage() {
                 variant="danger"
                 disabled={deleteProject.isPending}
                 onClick={() => {
+                  setActionError(null);
                   setConfirmation({
                     title: `Delete "${project.name}" and all of its tasks?`,
                     description: "This action cannot be undone.",
@@ -394,8 +399,10 @@ export default function ProjectDetailsPage() {
                         className="glass-interactive grid size-9 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-700 focus-visible:outline"
                         disabled={removeMember.isPending}
                         onClick={() => {
+                          setActionError(null);
                           setConfirmation({
-                            title: `Remove ${member.user.name} from this project?`,
+                            title: "Remove project member?",
+                            description: `Remove ${member.user.name} from "${project.name}". They will lose access to this project and its tasks.`,
                             confirmLabel: "Remove member",
                             onConfirm: () => removeMember.mutate(member.user.id),
                           });
@@ -461,13 +468,15 @@ export default function ProjectDetailsPage() {
       <ConfirmDialog
         confirmLabel={confirmation?.confirmLabel ?? "Confirm"}
         description={confirmation?.description}
+        error={confirmation ? actionError : null}
         onCancel={() => setConfirmation(null)}
         onConfirm={() => {
           if (!confirmation) return;
-          setConfirmation(null);
           confirmation.onConfirm();
         }}
         open={Boolean(confirmation)}
+        pending={removeMember.isPending || deleteProject.isPending}
+        pendingLabel="Working…"
         title={confirmation?.title ?? ""}
       />
     </div>

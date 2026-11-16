@@ -110,6 +110,7 @@ export default function TaskDetailsPage() {
         queryClient.invalidateQueries({ queryKey: ["projects"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
+      setConfirmation(null);
       router.replace(`/projects/${task?.projectId}`);
     },
     onError: (error) => setActionError(getErrorMessage(error)),
@@ -169,6 +170,7 @@ export default function TaskDetailsPage() {
             variant="danger"
             disabled={deleteTask.isPending}
             onClick={() => {
+              setActionError(null);
               setConfirmation({
                 title: `Delete "${task.title}"?`,
                 description: "This cannot be undone.",
@@ -346,13 +348,15 @@ export default function TaskDetailsPage() {
       <ConfirmDialog
         confirmLabel={confirmation?.confirmLabel ?? "Confirm"}
         description={confirmation?.description}
+        error={confirmation ? actionError : null}
         onCancel={() => setConfirmation(null)}
         onConfirm={() => {
           if (!confirmation) return;
-          setConfirmation(null);
           confirmation.onConfirm();
         }}
         open={Boolean(confirmation)}
+        pending={deleteTask.isPending}
+        pendingLabel="Deleting…"
         title={confirmation?.title ?? ""}
       />
     </div>
