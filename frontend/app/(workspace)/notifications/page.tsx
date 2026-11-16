@@ -12,6 +12,7 @@ import {
 } from "@/components/animated-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -112,41 +113,43 @@ function NotificationRow({
 }) {
   const Icon = icons[notification.type];
   return (
-    <article
-      className={`flex gap-3 rounded-xl px-3 py-4 sm:gap-4 ${
-        notification.isRead ? "" : "bg-brand/[0.035]"
-      }`}
-    >
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
-        <Icon size={16} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-sm font-semibold text-foreground">{notification.title}</h2>
-          {!notification.isRead ? <Badge>New</Badge> : null}
+    <IconHover>
+      <article
+        className={`flex gap-3 rounded-xl px-3 py-4 sm:gap-4 ${
+          notification.isRead ? "" : "bg-brand/[0.035]"
+        }`}
+      >
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
+          <Icon size={16} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground">{notification.title}</h2>
+            {!notification.isRead ? <Badge>New</Badge> : null}
+          </div>
+          <p className="mt-1 text-sm leading-6 text-muted">{notification.message}</p>
+          <p className="mt-1.5 text-xs text-muted">
+            {formatDate(notification.createdAt, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </p>
         </div>
-        <p className="mt-1 text-sm leading-6 text-muted">{notification.message}</p>
-        <p className="mt-1.5 text-xs text-muted">
-          {formatDate(notification.createdAt, {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-          })}
-        </p>
-      </div>
-      {!notification.isRead ? (
-        <button
-          aria-label={`Mark ${notification.title} as read`}
-          className="grid size-8 shrink-0 place-items-center self-center rounded-lg text-muted hover:bg-surface-secondary hover:text-brand"
-          disabled={isPending}
-          onClick={onMarkRead}
-          type="button"
-        >
-          <Check size={16} />
-        </button>
-      ) : null}
-    </article>
+        {!notification.isRead ? (
+          <button
+            aria-label={`Mark ${notification.title} as read`}
+            className="grid size-8 shrink-0 place-items-center self-center rounded-lg text-muted hover:bg-surface-secondary hover:text-brand"
+            disabled={isPending}
+            onClick={onMarkRead}
+            type="button"
+          >
+            <Check size={16} />
+          </button>
+        ) : null}
+      </article>
+    </IconHover>
   );
 }

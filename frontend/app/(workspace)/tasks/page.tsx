@@ -1,8 +1,9 @@
 "use client";
 
 import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "@/components/animated-icons";
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useState, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { IconHover } from "@/components/icon-hover";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { TaskRow } from "@/components/task-row";
 import { Badge } from "@/components/ui/badge";
@@ -13,26 +14,48 @@ import { PageHeading } from "@/components/ui/page-heading";
 import { apiFetch } from "@/lib/api";
 import type { PaginatedTasks, TaskStatus } from "@/types/api";
 
+type TaskFilter = TaskStatus | "ALL" | "OVERDUE";
+
 const statuses: Array<{
-  value: TaskStatus | "ALL";
+  value: TaskFilter;
   label: string;
   tone?: string;
 }> = [
   { value: "ALL", label: "All tasks" },
+  { value: "OVERDUE", label: "Overdue", tone: "bg-warning" },
   { value: "TODO", label: "To do", tone: "bg-danger" },
   { value: "IN_PROGRESS", label: "In progress", tone: "bg-warning" },
   { value: "DONE", label: "Done", tone: "bg-success" },
 ];
 
+function getRequestedStatus(): TaskFilter {
+  if (typeof window === "undefined") return "ALL";
+  const requestedStatus = new URLSearchParams(window.location.search).get("status");
+  return statuses.find((item) => item.value === requestedStatus)?.value ?? "ALL";
+}
+
+function subscribeToLocation(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+}
+
 export default function TasksPage() {
-  const [status, setStatus] = useState<TaskStatus | "ALL">("ALL");
+  const routeStatus = useSyncExternalStore(
+    subscribeToLocation,
+    getRequestedStatus,
+    () => "ALL",
+  );
+  const [selectedStatus, setSelectedStatus] = useState<TaskFilter | null>(null);
+  const status = selectedStatus ?? routeStatus;
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
+
   const query = useQuery({
     queryKey: ["tasks", status, deferredSearch],
     queryFn: () => {
       const params = new URLSearchParams({ limit: "100" });
-      if (status !== "ALL") params.set("status", status);
+      if (status === "OVERDUE") params.set("overdue", "true");
+      else if (status !== "ALL") params.set("status", status);
       if (deferredSearch) params.set("search", deferredSearch);
       return apiFetch<PaginatedTasks>(`/tasks?${params.toString()}`);
     },
@@ -51,40 +74,44 @@ export default function TasksPage() {
         description="A focused list of tasks from every project you belong to."
       />
       <section aria-label="Task filters" className="mb-5 flex flex-col gap-3 sm:flex-row">
-        <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
-          <Input
-            className="pl-9"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search task titles and descriptions"
-            aria-label="Search tasks"
-          />
-        </div>
-        <div className="scrollbar-hidden flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1" role="group" aria-label="Task status filters" tabIndex={0}>
-          <SlidersHorizontal className="ml-2 shrink-0 text-muted" size={15} />
-          {statuses.map((item) => (
-            <button
-              key={item.value}
-              className={`shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium transition ${
-                status === item.value
-                  ? "primary-action bg-black text-white"
-                  : "text-muted hover:bg-surface-secondary hover:text-foreground"
-              }`}
-              aria-pressed={status === item.value}
-              onClick={() => setStatus(item.value)}
-              type="button"
-            >
-              {item.tone ? (
-                <span
-                  aria-hidden="true"
-                  className={`mr-1.5 inline-block size-1.5 rounded-full ${item.tone}`}
-                />
-              ) : null}
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <IconHover>
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+            <Input
+              className="pl-9"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search task titles and descriptions"
+              aria-label="Search tasks"
+            />
+          </div>
+        </IconHover>
+        <IconHover>
+          <div className="scrollbar-hidden flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1" role="group" aria-label="Task status filters" tabIndex={0}>
+            <SlidersHorizontal className="ml-2 shrink-0 text-muted" size={15} />
+            {statuses.map((item) => (
+              <button
+                key={item.value}
+                className={`shrink-0 rounded-lg px-3 py-2.5 text-xs font-medium transition ${
+                  status === item.value
+                    ? "primary-action bg-black text-white"
+                    : "text-muted hover:bg-surface-secondary hover:text-foreground"
+                }`}
+                aria-pressed={status === item.value}
+                onClick={() => setSelectedStatus(item.value)}
+                type="button"
+              >
+                {item.tone ? (
+                  <span
+                    aria-hidden="true"
+                    className={`mr-1.5 inline-block size-1.5 rounded-full ${item.tone}`}
+                  />
+                ) : null}
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </IconHover>
       </section>
 
       <Card>

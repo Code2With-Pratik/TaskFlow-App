@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -278,12 +279,14 @@ export default function TaskDetailsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <Link
-        href={`/projects/${task.projectId}`}
-        className="inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-brand"
-      >
-        <ArrowLeft size={14} /> {task.project.name}
-      </Link>
+      <IconHover>
+        <Link
+          href={`/projects/${task.projectId}`}
+          className="inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-brand"
+        >
+          <ArrowLeft size={14} /> {task.project.name}
+        </Link>
+      </IconHover>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand">

@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { IconHover } from "@/components/icon-hover";
 import { cn } from "@/lib/utils";
 
 const buttonStyles = cva(
@@ -39,12 +40,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) {
     return (
-      <button
-        ref={ref}
-        className={cn(buttonStyles({ variant, size }), className)}
-        type={type}
-        {...props}
-      />
+      <IconHover>
+        <button
+          ref={ref}
+          className={cn(buttonStyles({ variant, size }), className)}
+          type={type}
+          {...props}
+        />
+      </IconHover>
     );
   },
 );

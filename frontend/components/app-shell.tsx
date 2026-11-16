@@ -18,6 +18,7 @@ import {
   X,
   type AnimatedIcon,
 } from "@/components/animated-icons";
+import { IconHover } from "@/components/icon-hover";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -249,13 +250,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
+        <div className="fixed inset-0 z-50 flex h-dvh lg:hidden">
           <button
             className="absolute inset-0 bg-black/55"
             aria-label="Close navigation"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative z-10 h-full shadow-2xl">
+          <div className="relative z-10 h-full max-h-dvh shadow-2xl">
             <AppSidebar onNavigate={() => setMobileMenuOpen(false)} />
             <Button
               className="absolute right-3 top-4"
@@ -579,7 +580,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Live updates are unavailable. The inbox will refresh automatically.
           </p>
         ) : null}
-        <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9">
+        <main className="mx-auto w-full max-w-[1440px] min-w-0 px-4 py-6 sm:px-7 sm:py-8 lg:px-9">
           {signOutError ? (
             <p
               className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground"
@@ -652,34 +653,36 @@ function NotificationPreviewRow({
   );
 
   return (
-    <article
-      className={`flex gap-2 rounded-xl px-2 py-3 ${
-        notification.isRead ? "" : "bg-brand/[0.035]"
-      }`}
-    >
-      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
-        <Icon size={15} strokeWidth={1.8} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <Link
-          href="/notifications"
-          className="glass-interactive block w-full rounded-md py-0.5 text-left focus-visible:outline"
-          aria-label={`Open notifications: ${notification.title}`}
-          onClick={onActivate}
-        >
-          {notificationContent}
-        </Link>
-        {isLong ? (
-          <button
-            type="button"
-            className="glass-interactive mt-1 rounded px-1 py-0.5 text-xs font-medium text-foreground underline decoration-border underline-offset-2 hover:decoration-foreground focus-visible:outline"
-            aria-expanded={expanded}
-            onClick={onToggleExpanded}
+    <IconHover>
+      <article
+        className={`flex gap-2 rounded-xl px-2 py-3 ${
+          notification.isRead ? "" : "bg-brand/[0.035]"
+        }`}
+      >
+        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
+          <Icon size={15} strokeWidth={1.8} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <Link
+            href="/notifications"
+            className="glass-interactive block w-full rounded-md py-0.5 text-left focus-visible:outline"
+            aria-label={`Open notifications: ${notification.title}`}
+            onClick={onActivate}
           >
-            Read {expanded ? "less" : "more"}
-          </button>
-        ) : null}
-      </div>
-    </article>
+            {notificationContent}
+          </Link>
+          {isLong ? (
+            <button
+              type="button"
+              className="glass-interactive mt-1 rounded px-1 py-0.5 text-xs font-medium text-foreground underline decoration-border underline-offset-2 hover:decoration-foreground focus-visible:outline"
+              aria-expanded={expanded}
+              onClick={onToggleExpanded}
+            >
+              Read {expanded ? "less" : "more"}
+            </button>
+          ) : null}
+        </div>
+      </article>
+    </IconHover>
   );
 }

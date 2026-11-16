@@ -84,6 +84,14 @@ export class TasksService {
       project: { members: { some: { userId } } },
       ...(filters.projectId ? { projectId: filters.projectId } : {}),
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.overdue
+        ? {
+            AND: [
+              { status: { not: 'DONE' } },
+              { dueDate: { lt: new Date() } },
+            ],
+          }
+        : {}),
       ...(filters.assigneeId ? { assigneeId: filters.assigneeId } : {}),
       ...(filters.search
         ? {

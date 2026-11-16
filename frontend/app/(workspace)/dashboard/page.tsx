@@ -14,6 +14,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { ActivityRow } from "@/components/activity-row";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { IconHover } from "@/components/icon-hover";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -26,24 +27,28 @@ const statCards = [
   {
     key: "totalProjects",
     label: "Active projects",
+    href: "/projects",
     icon: FolderKanban,
     iconClass: "bg-brand/10 text-brand",
   },
   {
     key: "totalTasks",
     label: "Total tasks",
+    href: "/tasks",
     icon: ListTodo,
     iconClass: "bg-surface-secondary text-muted",
   },
   {
     key: "completedTasks",
     label: "Completed",
+    href: "/tasks?status=DONE",
     icon: CheckCircle2,
     iconClass: "bg-success/10 text-success",
   },
   {
     key: "overdueTasks",
     label: "Overdue",
+    href: "/tasks?status=OVERDUE",
     icon: CalendarClock,
     iconClass: "bg-warning/10 text-warning",
   },
@@ -99,39 +104,46 @@ export default function DashboardPage() {
         aria-label="Workspace statistics"
         className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4"
       >
-        {statCards.map(({ key, label, icon: Icon, iconClass }) => (
-          <Card key={key}>
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-start justify-between">
-                <p className="text-xs font-medium text-muted">{label}</p>
-                <span className={`grid size-8 place-items-center rounded-xl ${iconClass}`}>
-                  <Icon size={16} />
-                </span>
-              </div>
-              <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-                {data.stats[key]}
-              </p>
-              <p className="mt-1 text-[11px] text-muted">
-                {key === "totalTasks" ? (
-                  <>
-                    <span className="font-medium text-danger-foreground">
-                      {data.stats.pendingTasks}
-                    </span>{" "}
-                    to do ·{" "}
-                    <span className="font-medium text-warning">
-                      {data.stats.inProgressTasks}
-                    </span>{" "}
-                    in progress
-                  </>
-                ) : key === "completedTasks"
-                    ? "Across your workspace"
-                    : key === "overdueTasks"
-                      ? "Need a little attention"
-                      : "You’re a member of"}
-                {key === "totalProjects" ? " your projects" : ""}
-              </p>
-            </CardContent>
-          </Card>
+        {statCards.map(({ key, label, href, icon: Icon, iconClass }) => (
+          <Link
+            aria-label={`${label}: ${data.stats[key]}. View ${label.toLowerCase()}.`}
+            className="group rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.99]"
+            href={href}
+            key={key}
+          >
+            <Card className="h-full transition duration-200 group-hover:-translate-y-0.5 group-hover:border-brand/30 group-hover:shadow-md group-focus-visible:border-brand/40">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-medium text-muted">{label}</p>
+                  <span className={`grid size-8 shrink-0 place-items-center rounded-xl ${iconClass}`}>
+                    <Icon size={16} />
+                  </span>
+                </div>
+                <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+                  {data.stats[key]}
+                </p>
+                <p className="mt-1 text-[11px] text-muted">
+                  {key === "totalTasks" ? (
+                    <>
+                      <span className="font-medium text-danger-foreground">
+                        {data.stats.pendingTasks}
+                      </span>{" "}
+                      to do ·{" "}
+                      <span className="font-medium text-warning">
+                        {data.stats.inProgressTasks}
+                      </span>{" "}
+                      in progress
+                    </>
+                  ) : key === "completedTasks"
+                      ? "Across your workspace"
+                      : key === "overdueTasks"
+                        ? "Need a little attention"
+                        : "You’re a member of"}
+                  {key === "totalProjects" ? " your projects" : ""}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </section>
 
@@ -234,12 +246,14 @@ export default function DashboardPage() {
               Keep your team’s work within reach.
             </p>
           </div>
-          <Link
-            className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
-            href="/projects"
-          >
-            View all <ArrowRight size={13} />
-          </Link>
+          <IconHover>
+            <Link
+              className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
+              href="/projects"
+            >
+              View all <ArrowRight size={13} />
+            </Link>
+          </IconHover>
         </div>
         {projects.data?.length ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

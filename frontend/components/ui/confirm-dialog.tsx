@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "@/components/animated-icons";
+import { IconHover } from "@/components/icon-hover";
 import { useEffect, useId, useRef } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -77,21 +78,23 @@ export function ConfirmDialog({
       role="alertdialog"
     >
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6">
-        <div className="flex items-start gap-4">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger-foreground">
-            <AlertTriangle aria-hidden="true" size={19} />
-          </span>
-          <div className="min-w-0 pt-0.5">
-            <h2 className="break-words text-base font-semibold leading-6 text-foreground" id={titleId}>
-              {title}
-            </h2>
-            {description ? (
-              <p className="mt-2 break-words text-sm leading-6 text-muted" id={descriptionId}>
-                {description}
-              </p>
-            ) : null}
+        <IconHover>
+          <div className="flex items-start gap-4">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-danger/10 text-danger-foreground">
+              <AlertTriangle aria-hidden="true" size={19} />
+            </span>
+            <div className="min-w-0 pt-0.5">
+              <h2 className="break-words text-base font-semibold leading-6 text-foreground" id={titleId}>
+                {title}
+              </h2>
+              {description ? (
+                <p className="mt-2 break-words text-sm leading-6 text-muted" id={descriptionId}>
+                  {description}
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
+        </IconHover>
         {error ? (
           <p className="mt-4 rounded-xl border border-danger/20 bg-danger/5 px-3 py-2.5 text-sm text-danger-foreground" id={errorId} role="alert">
             {error}

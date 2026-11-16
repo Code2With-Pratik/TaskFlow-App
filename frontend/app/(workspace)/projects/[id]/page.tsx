@@ -21,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActivityRow } from "@/components/activity-row";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { TaskRow } from "@/components/task-row";
+import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -189,12 +190,14 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="space-y-7">
-      <Link
-        href="/projects"
-        className="inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-brand"
-      >
-        <ArrowLeft size={14} /> All projects
-      </Link>
+      <IconHover>
+        <Link
+          href="/projects"
+          className="inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-brand"
+        >
+          <ArrowLeft size={14} /> All projects
+        </Link>
+      </IconHover>
       <PageHeading
         eyebrow="Project"
         title={project.name}
@@ -394,23 +397,25 @@ export default function ProjectDetailsPage() {
                       </select>
                     ) : null}
                     {member.role !== "OWNER" && (isOwner || (canManage && member.role === "MEMBER")) ? (
-                      <button
-                        aria-label={`Remove ${member.user.name}`}
-                        className="glass-interactive grid size-9 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-700 focus-visible:outline"
-                        disabled={removeMember.isPending}
-                        onClick={() => {
-                          setActionError(null);
-                          setConfirmation({
-                            title: "Remove project member?",
-                            description: `Remove ${member.user.name} from "${project.name}". They will lose access to this project and its tasks.`,
-                            confirmLabel: "Remove member",
-                            onConfirm: () => removeMember.mutate(member.user.id),
-                          });
-                        }}
-                        type="button"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <IconHover>
+                        <button
+                          aria-label={`Remove ${member.user.name}`}
+                          className="glass-interactive grid size-9 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-700 focus-visible:outline"
+                          disabled={removeMember.isPending}
+                          onClick={() => {
+                            setActionError(null);
+                            setConfirmation({
+                              title: "Remove project member?",
+                              description: `Remove ${member.user.name} from "${project.name}". They will lose access to this project and its tasks.`,
+                              confirmLabel: "Remove member",
+                              onConfirm: () => removeMember.mutate(member.user.id),
+                            });
+                          }}
+                          type="button"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </IconHover>
                     ) : null}
                   </div>
                 ))}

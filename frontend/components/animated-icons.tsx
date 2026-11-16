@@ -52,16 +52,9 @@ export type AnimatedIconProps = {
   "aria-hidden"?: AriaAttributes["aria-hidden"];
 };
 
-type InteractiveIcon = ComponentType<
-  AnimatedIconProps & {
-    animateOnHover?: boolean;
-    animateOnTap?: boolean;
-  }
->;
-
 export type AnimatedIcon = ComponentType<AnimatedIconProps>;
 
-function withCursorAnimation(Icon: InteractiveIcon): AnimatedIcon {
+function withCursorAnimation(Icon: ComponentType<AnimatedIconProps>): AnimatedIcon {
   return function AnimatedIconComponent({
     size,
     strokeWidth,
@@ -70,8 +63,6 @@ function withCursorAnimation(Icon: InteractiveIcon): AnimatedIcon {
   }: AnimatedIconProps) {
     return (
       <Icon
-        animateOnHover
-        animateOnTap
         aria-hidden={ariaHidden}
         className={className}
         size={size}

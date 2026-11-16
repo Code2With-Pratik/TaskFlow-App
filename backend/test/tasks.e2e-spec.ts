@@ -98,6 +98,7 @@ describe('Tasks, comments, and activity (e2e)', () => {
         description: 'Coordinate the first release',
         priority: 'HIGH',
         assigneeId: member.id,
+        dueDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       })
       .expect(201);
 
@@ -210,6 +211,27 @@ describe('Tasks, comments, and activity (e2e)', () => {
       inProgressTasks: 1,
       completedTasks: 0,
     });
+
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('Authorization', authorization('owner'))
+      .send({
+        projectId,
+        title: 'Completed overdue task',
+        status: 'DONE',
+        dueDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .expect(201);
+
+    const overdue = await request(app.getHttpServer())
+      .get('/tasks')
+      .query({ projectId, overdue: true })
+      .set('Authorization', authorization('owner'))
+      .expect(200);
+    expect(overdue.body.total).toBe(1);
+    expect(overdue.body.data.map((task: { id: string }) => task.id)).toEqual([
+      taskId,
+    ]);
 
     const comment = await request(app.getHttpServer())
       .post(`/tasks/${taskId}/comments`)

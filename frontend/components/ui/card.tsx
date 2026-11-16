@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from "react";
+import { IconHover } from "@/components/icon-hover";
 import { cn } from "@/lib/utils";
 
 export function Card({
@@ -6,13 +7,15 @@ export function Card({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn(
-        "glass-card rounded-2xl border border-border shadow-sm shadow-slate-950/[0.025]",
-        className,
-      )}
-      {...props}
-    />
+    <IconHover>
+      <div
+        className={cn(
+          "glass-card rounded-2xl border border-border shadow-sm shadow-slate-950/[0.025]",
+          className,
+        )}
+        {...props}
+      />
+    </IconHover>
   );
 }
 

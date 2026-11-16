@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Eye, EyeOff, Workflow } from "@/components/animated-icons";
+import { IconHover } from "@/components/icon-hover";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -101,12 +102,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <section className="relative hidden overflow-hidden bg-[#090909] px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between xl:px-20">
         <div className="absolute -right-36 -top-32 size-[520px] rounded-full border border-white/[0.08]" />
         <div className="absolute -right-16 -top-12 size-[340px] rounded-full border border-white/[0.08]" />
-        <Link href="/" className="relative z-10 flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-white text-black">
-            <Workflow size={21} />
-          </span>
-          <span className="text-lg font-semibold">TaskFlow</span>
-        </Link>
+        <IconHover>
+          <Link href="/" className="relative z-10 flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-white text-black">
+              <Workflow size={21} />
+            </span>
+            <span className="text-lg font-semibold">TaskFlow</span>
+          </Link>
+        </IconHover>
 
         <div className="relative z-10 max-w-xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs text-neutral-300">
@@ -159,15 +162,17 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
       <section className="flex min-h-screen items-center justify-center px-5 py-12 sm:px-8">
         <div className="w-full max-w-[410px]">
-          <Link
-            href="/"
-            className="mb-12 inline-flex items-center gap-2.5 lg:hidden"
-          >
-            <span className="grid size-9 place-items-center rounded-xl bg-black text-white">
-              <Workflow size={19} />
-            </span>
-            <span className="text-base font-semibold">TaskFlow</span>
-          </Link>
+          <IconHover>
+            <Link
+              href="/"
+              className="mb-12 inline-flex items-center gap-2.5 lg:hidden"
+            >
+              <span className="grid size-9 place-items-center rounded-xl bg-black text-white">
+                <Workflow size={19} />
+              </span>
+              <span className="text-base font-semibold">TaskFlow</span>
+            </Link>
+          </IconHover>
 
           <div className="mb-8">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.13em] text-brand">
@@ -267,31 +272,33 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                   </span>
                 ) : null}
               </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={
-                    isRegister ? "new-password" : "current-password"
-                  }
-                  placeholder={
-                    isRegister
-                      ? "At least 12 characters"
-                      : "Enter your password"
-                  }
-                  aria-invalid={Boolean(errors.password)}
-                  className="pr-12"
-                  {...register("password")}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
+              <IconHover>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={
+                      isRegister ? "new-password" : "current-password"
+                    }
+                    placeholder={
+                      isRegister
+                        ? "At least 12 characters"
+                        : "Enter your password"
+                    }
+                    aria-invalid={Boolean(errors.password)}
+                    className="pr-12"
+                    {...register("password")}
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                  >
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </IconHover>
               {errors.password ? (
                 <p className="mt-1.5 text-xs text-danger-foreground">
                   {errors.password.message}

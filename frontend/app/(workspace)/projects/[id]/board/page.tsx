@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -135,12 +136,14 @@ export default function ProjectBoardPage() {
 
   return (
     <div>
-      <Link
-        href={`/projects/${id}`}
-        className="mb-4 inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-brand"
-      >
-        <ArrowLeft size={14} /> {projectQuery.data.name}
-      </Link>
+      <IconHover>
+        <Link
+          href={`/projects/${id}`}
+          className="mb-4 inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-brand"
+        >
+          <ArrowLeft size={14} /> {projectQuery.data.name}
+        </Link>
+      </IconHover>
       <PageHeading
         eyebrow="Project board"
         title={projectQuery.data.name}
@@ -161,7 +164,12 @@ export default function ProjectBoardPage() {
           {actionError}
         </p>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div
+        aria-label="Task board columns"
+        className="scrollbar-hidden -mx-4 grid auto-cols-[minmax(min(85vw,22rem),1fr)] grid-flow-col gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 lg:grid-flow-row lg:grid-cols-2 lg:overflow-visible xl:grid-cols-3"
+        role="region"
+        tabIndex={0}
+      >
         {columns.map((column) => {
           const columnTasks = tasks.filter((task) => task.status === column.status);
           return (
@@ -263,14 +271,16 @@ export default function ProjectBoardPage() {
                   </Card>
                 ))}
                 {columnTasks.length === 0 ? (
-                  <button
-                    className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-xs text-muted transition hover:border-brand/40 hover:text-brand"
-                    onClick={() => setDialogOpen(true)}
-                    type="button"
-                  >
-                    <CirclePlus size={17} />
-                    Drop a task here or add one
-                  </button>
+                  <IconHover>
+                    <button
+                      className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border text-xs text-muted transition hover:border-brand/40 hover:text-brand"
+                      onClick={() => setDialogOpen(true)}
+                      type="button"
+                    >
+                      <CirclePlus size={17} />
+                      Drop a task here or add one
+                    </button>
+                  </IconHover>
                 ) : null}
               </div>
             </section>

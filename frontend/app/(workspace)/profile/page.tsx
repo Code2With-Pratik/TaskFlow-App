@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Mail, ShieldCheck, UserRound } from "@/components/animated-icons";
+import { IconHover } from "@/components/icon-hover";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -108,17 +109,19 @@ export default function ProfilePage() {
               <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-email">
                 Email address
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
-                <Input
-                  className="pl-9"
-                  id="profile-email"
-                  type="email"
-                  value={profile.email}
-                  disabled
-                  readOnly
-                />
-              </div>
+              <IconHover>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+                  <Input
+                    className="pl-9"
+                    id="profile-email"
+                    type="email"
+                    value={profile.email}
+                    disabled
+                    readOnly
+                  />
+                </div>
+              </IconHover>
               <p className="mt-1.5 text-xs text-muted">
                 Email changes are not currently supported.
               </p>
