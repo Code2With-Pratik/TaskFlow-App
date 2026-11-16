@@ -97,7 +97,7 @@ export class AuthController {
     response.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
       secure: this.secureCookies,
-      sameSite: 'lax',
+      sameSite: this.secureCookies ? 'none' : 'lax',
       path: REFRESH_COOKIE_PATH,
     });
   }
@@ -114,7 +114,7 @@ export class AuthController {
     response.cookie(REFRESH_COOKIE_NAME, token, {
       httpOnly: true,
       secure: this.secureCookies,
-      sameSite: 'lax',
+      sameSite: this.secureCookies ? 'none' : 'lax',
       path: REFRESH_COOKIE_PATH,
       maxAge: this.refreshTokenTtlSeconds * 1000,
     });

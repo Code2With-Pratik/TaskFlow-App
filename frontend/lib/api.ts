@@ -1,8 +1,16 @@
 import type { AuthSession } from "@/types/api";
 
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"
-).replace(/\/+$/, "");
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+if (!configuredApiUrl && process.env.NODE_ENV === "production") {
+  throw new Error(
+    "NEXT_PUBLIC_API_URL must be set to the deployed TaskFlow API URL.",
+  );
+}
+
+const API_URL = (configuredApiUrl || "http://localhost:3000").replace(
+  /\/+$/,
+  "",
+);
 
 let accessToken: string | null = null;
 let refreshInFlight: Promise<AuthSession | null> | null = null;

@@ -1,5 +1,6 @@
 
 import { ValidationPipe } from '@nestjs/common';
+import type { CorsOptions } from 'cors';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import type { INestApplication } from '@nestjs/common';
@@ -17,9 +18,10 @@ export function configureApp(
     .getOrThrow<string>('FRONTEND_URL')
     .split(',')
     .map((url) => url.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((url) => new URL(url).origin);
 
-  app.enableCors({
+  const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
       // Allow requests without an Origin header (e.g. server-to-server)
       if (!origin || frontendUrls.includes(origin)) {
@@ -31,7 +33,8 @@ export function configureApp(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+  };
+  app.enableCors(corsOptions);
 
   // Request validation
   app.useGlobalPipes(

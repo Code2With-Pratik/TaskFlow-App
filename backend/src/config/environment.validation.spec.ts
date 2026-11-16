@@ -29,9 +29,20 @@ describe('validateEnvironment', () => {
     expect(validateEnvironment(environment).PORT).toBe(3000);
   });
 
+  it('accepts multiple frontend origins for deployment previews', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        FRONTEND_URL:
+          'https://task-flow-app-delta-one.vercel.app, https://taskflow-preview.vercel.app',
+      }),
+    ).not.toThrow();
+  });
+
   it.each([
     ['PORT', '70000'],
     ['FRONTEND_URL', 'not-a-url'],
+    ['FRONTEND_URL', 'https://valid.example.com,not-a-url'],
     ['DATABASE_URL', 'mysql://localhost/taskflow'],
     ['JWT_ACCESS_SECRET', 'too-short'],
     ['ACCESS_TOKEN_TTL', '15 weeks'],

@@ -4,6 +4,13 @@ export function validateEnvironment(environment: Environment): Environment {
   const errors: string[] = [];
   const port = Number(environment.PORT ?? 3000);
   const frontendUrl = environment.FRONTEND_URL;
+  const frontendUrls =
+    typeof frontendUrl === 'string'
+      ? frontendUrl
+          .split(',')
+          .map((url) => url.trim())
+          .filter(Boolean)
+      : [];
   const databaseUrl = environment.DATABASE_URL;
   const accessSecret = environment.JWT_ACCESS_SECRET;
   const refreshSecret = environment.JWT_REFRESH_SECRET;
@@ -22,8 +29,13 @@ export function validateEnvironment(environment: Environment): Environment {
     errors.push('PORT must be an integer between 1 and 65535');
   }
 
-  if (typeof frontendUrl !== 'string' || !isHttpUrl(frontendUrl)) {
-    errors.push('FRONTEND_URL must be a valid HTTP or HTTPS URL');
+  if (
+    frontendUrls.length === 0 ||
+    frontendUrls.some((url) => !isHttpUrl(url))
+  ) {
+    errors.push(
+      'FRONTEND_URL must contain one or more comma-separated HTTP or HTTPS URLs',
+    );
   }
 
   if (typeof databaseUrl !== 'string' || !isPostgresUrl(databaseUrl)) {

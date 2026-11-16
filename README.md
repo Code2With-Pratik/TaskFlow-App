@@ -61,6 +61,46 @@ target used by Compose. The API and database ports are bound to loopback by
 default; adjust the compose port mappings deliberately when deploying beyond
 local development.
 
+## Deploying to Vercel and Render
+
+Set the Vercel project root to `frontend`. Configure this environment variable
+for Production (and Preview if those deployments need the API):
+
+```text
+NEXT_PUBLIC_API_URL=https://<your-nest-api-service>.onrender.com
+```
+
+Use the API service origin only—do not add `/health` or `/api`. This variable
+is embedded at build time, so redeploy Vercel after changing it.
+
+The Render URL previously used by the app,
+`https://taskflow-app-w4mm.onrender.com`, is serving the Next.js frontend, not
+the NestJS API: `/health` currently returns a Next.js 404. Create a separate
+Render Web Service from this repository with **Root Directory** `backend`,
+**Build Command** `npm ci --include=dev && npm run build`, **Start Command**
+`npm run db:migrate:deploy && npm run start:prod`, and **Health Check Path**
+`/health`. Add these environment variables to that API service:
+
+| Variable | Value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `FRONTEND_URL` | `https://task-flow-app-delta-one.vercel.app` |
+| `DATABASE_URL` | Render PostgreSQL internal URL (or your PostgreSQL connection URL) |
+| `JWT_ACCESS_SECRET` | A unique random secret of at least 32 characters |
+| `JWT_REFRESH_SECRET` | A different unique random secret of at least 32 characters |
+
+Render supplies `PORT`. Keep the database URL and JWT secrets private. Once
+the API is deployed, verify that
+`https://<your-nest-api-service>.onrender.com/health` returns JSON with
+`"status":"ok"`. Then set that service URL in Vercel as
+`NEXT_PUBLIC_API_URL` and redeploy. `FRONTEND_URL` must match the Vercel origin
+exactly. Add other Vercel preview/custom origins as comma-separated URLs.
+
+Because Vercel and Render use different sites, the production refresh cookie
+uses `SameSite=None; Secure`. Browsers that block third-party cookies may
+restrict refresh-token persistence; custom frontend and API hostnames under
+the same site are the most reliable long-term setup.
+
 ## Project setup
 
 ```bash
