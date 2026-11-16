@@ -39,7 +39,7 @@ export function AppSidebar({
   });
 
   return (
-    <aside className="flex h-full w-[252px] shrink-0 flex-col border-r border-border bg-surface">
+    <aside className="glass-sidebar flex h-full w-[252px] shrink-0 flex-col border-r border-border">
       <Link
         className="flex h-[76px] items-center gap-3 px-6"
         href="/dashboard"
@@ -120,7 +120,7 @@ export function AppSidebar({
             <p className="px-3 py-2 text-xs text-muted">Loading projects…</p>
           ) : projectsError ? (
             <button
-              className="px-3 py-2 text-left text-xs text-danger hover:underline"
+              className="px-3 py-2 text-left text-xs text-danger-foreground hover:underline"
               onClick={() => void refetchProjects()}
             >
               Could not load projects. Retry

@@ -174,7 +174,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                   {...register("name")}
                 />
                 {errors.name ? (
-                  <p className="mt-1.5 text-xs text-danger">
+                  <p className="mt-1.5 text-xs text-danger-foreground">
                     {errors.name.message}
                   </p>
                 ) : null}
@@ -197,7 +197,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 {...register("email")}
               />
               {errors.email ? (
-                <p className="mt-1.5 text-xs text-danger">
+                <p className="mt-1.5 text-xs text-danger-foreground">
                   {errors.email.message}
                 </p>
               ) : null}
@@ -243,7 +243,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 </button>
               </div>
               {errors.password ? (
-                <p className="mt-1.5 text-xs text-danger">
+                <p className="mt-1.5 text-xs text-danger-foreground">
                   {errors.password.message}
                 </p>
               ) : null}
@@ -252,7 +252,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             {formError ? (
               <p
                 role="alert"
-                className="rounded-xl border border-danger/20 bg-danger/5 px-3.5 py-3 text-sm text-danger"
+                className="rounded-xl border border-danger/20 bg-danger/5 px-3.5 py-3 text-sm text-danger-foreground"
               >
                 {formError}
               </p>

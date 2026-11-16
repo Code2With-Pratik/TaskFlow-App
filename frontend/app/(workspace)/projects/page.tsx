@@ -87,7 +87,7 @@ export default function ProjectsPage() {
               href={`/projects/${project.id}`}
               className="group"
             >
-              <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-md">
+              <Card className="glass-interactive h-full p-5 transition hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-md">
                 <div className="flex items-start justify-between">
                   <span className="grid size-10 place-items-center rounded-xl bg-brand/10 text-brand">
                     <FolderKanban size={18} />
@@ -174,7 +174,7 @@ export default function ProjectsPage() {
                   {...register("name")}
                 />
                 {errors.name ? (
-                  <p className="mt-1 text-xs text-danger">{errors.name.message}</p>
+                  <p className="mt-1 text-xs text-danger-foreground">{errors.name.message}</p>
                 ) : null}
               </div>
               <div>
@@ -192,13 +192,13 @@ export default function ProjectsPage() {
                   {...register("description")}
                 />
                 {errors.description ? (
-                  <p className="mt-1 text-xs text-danger">
+                  <p className="mt-1 text-xs text-danger-foreground">
                     {errors.description.message}
                   </p>
                 ) : null}
               </div>
               {actionError ? (
-                <p className="text-sm text-danger" role="alert">
+                <p className="text-sm text-danger-foreground" role="alert">
                   {actionError}
                 </p>
               ) : null}

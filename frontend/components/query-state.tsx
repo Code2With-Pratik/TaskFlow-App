@@ -23,7 +23,7 @@ export function ErrorState({
       role="alert"
       className="flex flex-col items-center rounded-2xl border border-danger/20 bg-danger/5 px-5 py-10 text-center"
     >
-      <AlertCircle className="text-danger" size={22} />
+      <AlertCircle className="text-danger-foreground" size={22} />
       <p className="mt-3 text-sm font-medium text-foreground">
         We couldn&apos;t load this information.
       </p>

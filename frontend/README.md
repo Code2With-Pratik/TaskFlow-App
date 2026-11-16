@@ -24,8 +24,13 @@ the protected dashboard. Register an account or sign in to continue.
 - `/projects` and `/projects/:id` — create projects, manage members, and review work.
 - `/projects/:id/board` — drag tasks between status columns or change status accessibly.
 - `/tasks` and `/tasks/:id` — filter tasks, update status and priority, and discuss work.
-- `/notifications` — review and mark persisted notifications as read.
+- `/notifications` — review and mark persisted notifications as read. The
+  workspace bell previews the latest five, supports expanding long messages,
+  and marks an unread item read without leaving the current screen.
 - `/profile` and `/settings` — update your profile and select the light or dark theme.
+
+The profile menu and notification preview dismiss on Escape and outside
+interaction; the profile menu also supports arrow-key navigation.
 
 ## Authentication and data
 

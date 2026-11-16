@@ -11,10 +11,13 @@
   --border: #e5e5e5;
   --success: #15803d;
   --warning: #92400e;
-  --danger: #b91c1c;
-  --danger-action: #b91c1c;
+  --danger: #FF0000;
+  --danger-foreground: #991b1b;
+  --danger-action: #FF0000;
   --primary-action-edge: #000000;
   --primary-action-shadow: 0 1px 2px rgb(0 0 0 / 14%);
+  --glass-surface: color-mix(in srgb, var(--surface) 92%, transparent);
+  --glass-edge: rgb(255 255 255 / 72%);
 }
 
 :root[data-theme="dark"] {
@@ -28,11 +31,14 @@
   --border: rgb(255 255 255 / 12%);
   --success: #4ade80;
   --warning: #fbbf24;
-  --danger: #f87171;
-  --danger-action: #b91c1c;
+  --danger: #FF0000;
+  --danger-foreground: #ff9a9a;
+  --danger-action: #FF0000;
   --primary-action-edge: #5c5c5c;
   --primary-action-shadow:
     inset 0 1px 0 rgb(255 255 255 / 8%), 0 1px 3px rgb(0 0 0 / 55%);
+  --glass-surface: color-mix(in srgb, var(--surface) 86%, transparent);
+  --glass-edge: rgb(255 255 255 / 14%);
 }
 
 @theme inline {
@@ -46,7 +52,9 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
   --color-danger-action: var(--danger-action);
+  --color-glass-edge: var(--glass-edge);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -58,6 +66,70 @@
 .primary-action {
   border: 1px solid var(--primary-action-edge);
   box-shadow: var(--primary-action-shadow);
+}
+
+.glass-panel,
+.glass-header,
+.glass-sidebar {
+  background: var(--glass-surface);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+.glass-panel {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 48%),
+    0 16px 38px rgb(0 0 0 / 12%);
+}
+
+:root[data-theme="dark"] .glass-panel {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 7%),
+    0 18px 42px rgb(0 0 0 / 42%);
+}
+
+.glass-card {
+  border-color: var(--glass-edge);
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 46%),
+    0 1px 3px rgb(15 23 42 / 4%);
+}
+
+.glass-header {
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 28%);
+}
+
+.glass-sidebar {
+  box-shadow: inset -1px 0 0 rgb(255 255 255 / 22%);
+}
+
+:root[data-theme="dark"] .glass-header,
+:root[data-theme="dark"] .glass-sidebar {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 2%);
+}
+
+:root[data-theme="dark"] .glass-card {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 6%),
+    0 1px 3px rgb(0 0 0 / 28%);
+}
+
+.glass-interactive {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.glass-interactive:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 9%);
+}
+
+.glass-interactive:not(:disabled):active {
+  transform: translateY(0) scale(0.985);
 }
 
 html {
@@ -81,6 +153,12 @@ select {
   font: inherit;
 }
 
+button:not(:disabled),
+a[href],
+[role="button"] {
+  cursor: pointer;
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -92,4 +170,20 @@ select:focus-visible {
 
 ::selection {
   background: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .glass-interactive:not(:disabled):hover,
+  .glass-interactive:not(:disabled):active {
+    transform: none;
+  }
 }

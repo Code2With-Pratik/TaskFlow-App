@@ -114,7 +114,7 @@ export default function DashboardPage() {
               <p className="mt-1 text-[11px] text-muted">
                 {key === "totalTasks" ? (
                   <>
-                    <span className="font-medium text-danger">
+                    <span className="font-medium text-danger-foreground">
                       {data.stats.pendingTasks}
                     </span>{" "}
                     to do ·{" "}

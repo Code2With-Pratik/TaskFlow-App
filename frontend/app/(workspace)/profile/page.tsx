@@ -102,7 +102,7 @@ export default function ProfilePage() {
                 aria-invalid={Boolean(errors.name)}
                 {...register("name")}
               />
-              {errors.name ? <p className="mt-1.5 text-xs text-danger">{errors.name.message}</p> : null}
+              {errors.name ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.name.message}</p> : null}
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-email">
@@ -124,7 +124,7 @@ export default function ProfilePage() {
               </p>
             </div>
             {updateProfile.error ? (
-              <p className="text-sm text-danger" role="alert">
+              <p className="text-sm text-danger-foreground" role="alert">
                 {getErrorMessage(updateProfile.error)}
               </p>
             ) : null}

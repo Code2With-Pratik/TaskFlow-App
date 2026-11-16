@@ -245,7 +245,7 @@ export default function ProjectDetailsPage() {
       />
 
       {actionError ? (
-        <p className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
+        <p className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground" role="alert">
           {actionError}
         </p>
       ) : null}
@@ -265,14 +265,14 @@ export default function ProjectDetailsPage() {
                   Name
                 </label>
                 <Input id="edit-project-name" {...registerProject("name")} />
-                {projectErrors.name ? <p className="mt-1 text-xs text-danger">{projectErrors.name.message}</p> : null}
+                {projectErrors.name ? <p className="mt-1 text-xs text-danger-foreground">{projectErrors.name.message}</p> : null}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="edit-project-description">
                   Description
                 </label>
                 <Textarea id="edit-project-description" rows={2} {...registerProject("description")} />
-                {projectErrors.description ? <p className="mt-1 text-xs text-danger">{projectErrors.description.message}</p> : null}
+                {projectErrors.description ? <p className="mt-1 text-xs text-danger-foreground">{projectErrors.description.message}</p> : null}
               </div>
               <div className="flex justify-end sm:col-span-2">
                 <Button type="submit" disabled={updateProject.isPending}>
@@ -376,7 +376,7 @@ export default function ProjectDetailsPage() {
                     {member.role !== "OWNER" && (isOwner || (canManage && member.role === "MEMBER")) ? (
                       <button
                         aria-label={`Remove ${member.user.name}`}
-                        className="grid size-8 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-800"
+                        className="glass-interactive grid size-8 place-items-center rounded-lg bg-danger-action text-black hover:bg-red-700 focus-visible:outline"
                         disabled={removeMember.isPending}
                         onClick={() => {
                           if (window.confirm(`Remove ${member.user.name} from this project?`)) {
@@ -411,7 +411,7 @@ export default function ProjectDetailsPage() {
                       <Plus size={15} />
                     </Button>
                   </div>
-                  {memberErrors.email ? <p className="mt-1 text-xs text-danger">{memberErrors.email.message}</p> : null}
+                  {memberErrors.email ? <p className="mt-1 text-xs text-danger-foreground">{memberErrors.email.message}</p> : null}
                   <p className="mt-2 text-[10px] leading-4 text-muted">
                     The person must already have an account. They will be added as a project member.
                   </p>

@@ -157,7 +157,7 @@ export default function ProjectBoardPage() {
         }
       />
       {actionError ? (
-        <p className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
+        <p className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground" role="alert">
           {actionError}
         </p>
       ) : null}
@@ -303,14 +303,14 @@ export default function ProjectBoardPage() {
                   Task title
                 </label>
                 <Input autoFocus id="task-title" placeholder="Prepare the launch brief" {...register("title")} />
-                {errors.title ? <p className="mt-1 text-xs text-danger">{errors.title.message}</p> : null}
+                {errors.title ? <p className="mt-1 text-xs text-danger-foreground">{errors.title.message}</p> : null}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="task-description">
                   Description <span className="font-normal text-muted">· optional</span>
                 </label>
                 <Textarea id="task-description" rows={3} placeholder="Add helpful context…" {...register("description")} />
-                {errors.description ? <p className="mt-1 text-xs text-danger">{errors.description.message}</p> : null}
+                {errors.description ? <p className="mt-1 text-xs text-danger-foreground">{errors.description.message}</p> : null}
               </div>
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-foreground">Priority</span>
@@ -343,7 +343,7 @@ export default function ProjectBoardPage() {
                 </label>
                 <Input id="task-due-date" type="date" {...register("dueDate")} />
               </div>
-              {actionError ? <p className="text-sm text-danger" role="alert">{actionError}</p> : null}
+              {actionError ? <p className="text-sm text-danger-foreground" role="alert">{actionError}</p> : null}
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="secondary" disabled={createTask.isPending} onClick={() => setDialogOpen(false)}>
                   Cancel

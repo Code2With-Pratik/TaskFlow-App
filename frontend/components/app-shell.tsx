@@ -1,15 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, Moon, Sun, X } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Bell,
+  Check,
+  Clock3,
+  FolderPlus,
+  MessageSquareText,
+  Menu,
+  Moon,
+  Sun,
+  TriangleAlert,
+  UserRoundPlus,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
-import { initials } from "@/lib/format";
+import { formatDate, initials } from "@/lib/format";
 import { useAuth } from "@/app/auth-provider";
 import { useTheme } from "@/app/theme-provider";
 import {
@@ -19,7 +31,23 @@ import {
   getErrorMessage,
   refreshSession,
 } from "@/lib/api";
-import type { NotificationList } from "@/types/api";
+import type {
+  Notification,
+  NotificationList,
+  NotificationType,
+} from "@/types/api";
+
+const notificationIcons: Record<NotificationType, LucideIcon> = {
+  TASK_ASSIGNED: UserRoundPlus,
+  TASK_STATUS_UPDATED: Check,
+  COMMENT_ADDED: MessageSquareText,
+  PROJECT_INVITATION: FolderPlus,
+  TASK_DUE_SOON: Clock3,
+  TASK_OVERDUE: TriangleAlert,
+};
+
+const notificationPreviewLimit = 5;
+const notificationMessageLimit = 150;
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Overview",
@@ -40,14 +68,104 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [realtimeUnavailable, setRealtimeUnavailable] = useState(false);
-  const { data: notifications } = useQuery({
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const notificationAreaRef = useRef<HTMLDivElement>(null);
+  const notificationTriggerRef = useRef<HTMLButtonElement>(null);
+  const profileAreaRef = useRef<HTMLDivElement>(null);
+  const profileTriggerRef = useRef<HTMLButtonElement>(null);
+  const notificationsQuery = useQuery({
     queryKey: ["notifications"],
     queryFn: () => apiFetch<NotificationList>("/notifications"),
     refetchInterval: 60_000,
   });
+  const notifications = notificationsQuery.data;
+  const markNotificationRead = useMutation<
+    void,
+    Error,
+    string,
+    { previous: NotificationList | undefined }
+  >({
+    mutationFn: (id) =>
+      apiFetch<void>(`/notifications/${id}/read`, { method: "PATCH" }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<NotificationList>([
+        "notifications",
+      ]);
+      if (previous) {
+        queryClient.setQueryData<NotificationList>(["notifications"], {
+          ...previous,
+          data: previous.data.map((notification) =>
+            notification.id === id
+              ? { ...notification, isRead: true }
+              : notification,
+          ),
+          unreadCount: Math.max(
+            0,
+            previous.unreadCount -
+              (previous.data.some(
+                (notification) => notification.id === id && !notification.isRead,
+              )
+                ? 1
+                : 0),
+          ),
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["notifications"], context.previous);
+      }
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
   const title =
     pageTitles[pathname] ??
     (pathname.includes("/board") ? "Project board" : "Project");
+
+  useEffect(() => {
+    if (!notificationOpen && !profileOpen) return;
+
+    function dismissOutside(event: PointerEvent | FocusEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (
+        notificationOpen &&
+        !notificationAreaRef.current?.contains(target)
+      ) {
+        setNotificationOpen(false);
+      }
+      if (profileOpen && !profileAreaRef.current?.contains(target)) {
+        setProfileOpen(false);
+      }
+    }
+
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      if (notificationOpen) {
+        setNotificationOpen(false);
+        notificationTriggerRef.current?.focus();
+      } else if (profileOpen) {
+        setProfileOpen(false);
+        profileTriggerRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", dismissOutside);
+    document.addEventListener("focusin", dismissOutside);
+    document.addEventListener("keydown", dismissOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside);
+      document.removeEventListener("focusin", dismissOutside);
+      document.removeEventListener("keydown", dismissOnEscape);
+    };
+  }, [notificationOpen, profileOpen]);
 
   useEffect(() => {
     if (!user) return;
@@ -150,7 +268,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       <div className="min-h-screen lg:pl-[252px]">
-        <header className="sticky top-0 z-10 flex h-[68px] items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md sm:px-7 lg:px-9">
+        <header className="glass-header sticky top-0 z-10 flex h-[68px] items-center justify-between border-b border-border px-4 sm:px-7 lg:px-9">
           <div className="flex min-w-0 items-center gap-3">
             <Button
               className="lg:hidden"
@@ -176,23 +294,178 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </Button>
-            <Link
-              href="/notifications"
-              className="relative grid size-10 place-items-center rounded-xl text-muted transition-colors hover:bg-surface-secondary hover:text-foreground"
-              aria-label={
-                notifications?.unreadCount
-                  ? `Notifications, ${notifications.unreadCount} unread`
-                  : "Notifications"
-              }
-            >
-              <Bell size={18} strokeWidth={1.8} />
-              {notifications?.unreadCount ? (
-                <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-surface bg-foreground" />
-              ) : null}
-            </Link>
+            <div className="relative" ref={notificationAreaRef}>
+              <Button
+                ref={notificationTriggerRef}
+                size="icon"
+                variant="ghost"
+                aria-label={
+                  notifications?.unreadCount
+                    ? `Notifications, ${notifications.unreadCount} unread`
+                    : "Notifications"
+                }
+                aria-haspopup="dialog"
+                aria-expanded={notificationOpen}
+                aria-controls={
+                  notificationOpen ? "notification-preview" : undefined
+                }
+                onClick={() => {
+                  setNotificationOpen((open) => !open);
+                  setProfileOpen(false);
+                }}
+              >
+                <Bell size={18} strokeWidth={1.8} />
+                {notifications?.unreadCount ? (
+                  <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-surface bg-danger-action" />
+                ) : null}
+              </Button>
+              {notificationOpen ? (
+                <section
+                  id="notification-preview"
+                  aria-labelledby="notification-preview-title"
+                  aria-busy={notificationsQuery.isLoading || markNotificationRead.isPending}
+                  className="glass-panel absolute right-0 top-full z-30 mt-2 flex max-h-[min(34rem,calc(100vh-6rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-glass-edge shadow-2xl shadow-black/15 sm:w-96"
+                  role="dialog"
+                >
+                  <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3.5">
+                    <div className="min-w-0">
+                      <h2
+                        id="notification-preview-title"
+                        className="text-sm font-semibold text-foreground"
+                      >
+                        Notifications
+                      </h2>
+                      <p className="mt-0.5 text-xs text-muted" role="status" aria-live="polite">
+                        {notifications?.unreadCount
+                          ? `${notifications.unreadCount} unread`
+                          : "You’re all caught up"}
+                      </p>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-8"
+                      aria-label="Close notifications"
+                      onClick={() => {
+                        setNotificationOpen(false);
+                        notificationTriggerRef.current?.focus();
+                      }}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
 
-            <details className="group relative ml-1">
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl p-1.5 hover:bg-surface-secondary">
+                  {markNotificationRead.error ? (
+                    <p className="mx-3 mt-3 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger-foreground" role="alert">
+                      {getErrorMessage(markNotificationRead.error)}
+                    </p>
+                  ) : null}
+
+                  <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                    {notificationsQuery.isLoading ? (
+                      <p className="px-3 py-8 text-center text-sm text-muted" role="status">
+                        Loading notifications…
+                      </p>
+                    ) : notificationsQuery.error ? (
+                      <div className="px-3 py-7 text-center">
+                        <p className="text-sm text-foreground">
+                          Could not load notifications.
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          {getErrorMessage(notificationsQuery.error)}
+                        </p>
+                        <Button
+                          className="mt-3"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => void notificationsQuery.refetch()}
+                        >
+                          Try again
+                        </Button>
+                      </div>
+                    ) : notifications?.data.length ? (
+                      <div className="divide-y divide-border">
+                        {notifications.data
+                          .slice(0, notificationPreviewLimit)
+                          .map((notification) => (
+                            <NotificationPreviewRow
+                              key={notification.id}
+                              notification={notification}
+                              expanded={expandedNotifications.has(notification.id)}
+                              isPending={
+                                markNotificationRead.isPending &&
+                                markNotificationRead.variables === notification.id
+                              }
+                              onActivate={() => {
+                                if (
+                                  !notification.isRead &&
+                                  !markNotificationRead.isPending
+                                ) {
+                                  markNotificationRead.mutate(notification.id);
+                                }
+                              }}
+                              onToggleExpanded={() =>
+                                setExpandedNotifications((current) => {
+                                  const next = new Set(current);
+                                  if (next.has(notification.id)) {
+                                    next.delete(notification.id);
+                                  } else {
+                                    next.add(notification.id);
+                                  }
+                                  return next;
+                                })
+                              }
+                            />
+                          ))}
+                      </div>
+                    ) : (
+                      <p className="px-3 py-8 text-center text-sm text-muted">
+                        No notifications yet. Updates from your projects will appear here.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-border p-2">
+                    <Link
+                      className="block rounded-xl px-3 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-surface-secondary focus-visible:outline"
+                      href="/notifications"
+                      onClick={() => setNotificationOpen(false)}
+                    >
+                      View all notifications
+                    </Link>
+                  </div>
+                </section>
+              ) : null}
+            </div>
+
+            <div className="relative ml-1" ref={profileAreaRef}>
+              <button
+                ref={profileTriggerRef}
+                type="button"
+                className="glass-interactive flex items-center gap-2 rounded-xl p-1.5 hover:bg-surface-secondary"
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+                aria-controls={profileOpen ? "profile-menu" : undefined}
+                aria-label={`${user?.name ?? "Profile"} menu`}
+                onClick={() => {
+                  setProfileOpen((open) => !open);
+                  setNotificationOpen(false);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setProfileOpen(true);
+                    requestAnimationFrame(() => {
+                      const items =
+                        profileAreaRef.current?.querySelectorAll<HTMLElement>(
+                          '[role="menuitem"]',
+                        );
+                      if (event.key === "ArrowUp") items?.[items.length - 1]?.focus();
+                      else items?.[0]?.focus();
+                    });
+                  }
+                }}
+              >
                 <span className="grid size-8 place-items-center rounded-full bg-brand/10 text-xs font-semibold text-brand">
                   {user ? initials(user.name) : "TF"}
                 </span>
@@ -204,29 +477,79 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     {user?.email}
                   </span>
                 </span>
-              </summary>
-              <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface p-1.5 shadow-xl">
-                <Link
-                  className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-surface-secondary"
-                  href="/profile"
+              </button>
+              {profileOpen ? (
+                <div
+                  id="profile-menu"
+                  className="glass-panel absolute right-0 mt-2 w-56 rounded-2xl border border-glass-edge p-1.5 shadow-xl"
+                  role="menu"
+                  aria-label="Profile"
+                  onKeyDown={(event) => {
+                    if (event.key === "Tab") {
+                      setProfileOpen(false);
+                      return;
+                    }
+                    if (
+                      !["ArrowDown", "ArrowUp", "Home", "End"].includes(
+                        event.key,
+                      )
+                    ) {
+                      return;
+                    }
+                    event.preventDefault();
+                    const items = Array.from(
+                      event.currentTarget.querySelectorAll<HTMLElement>(
+                        '[role="menuitem"]',
+                      ),
+                    );
+                    const currentIndex = items.indexOf(
+                      document.activeElement as HTMLElement,
+                    );
+                    const nextIndex =
+                      event.key === "Home"
+                        ? 0
+                        : event.key === "End"
+                          ? items.length - 1
+                          : (currentIndex +
+                              (event.key === "ArrowDown" ? 1 : -1) +
+                              items.length) %
+                            items.length;
+                    items[nextIndex]?.focus();
+                  }}
                 >
-                  Your profile
-                </Link>
-                <Link
-                  className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-surface-secondary"
-                  href="/settings"
-                >
-                  Settings
-                </Link>
-                <button
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-surface-secondary"
-                  disabled={isSigningOut}
-                  onClick={() => void handleSignOut()}
-                >
-                  {isSigningOut ? "Signing out…" : "Sign out"}
-                </button>
-              </div>
-            </details>
+                  <Link
+                    role="menuitem"
+                    tabIndex={-1}
+                    className="block rounded-xl px-3 py-2.5 text-sm text-foreground hover:bg-surface-secondary focus-visible:outline"
+                    href="/profile"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    Your profile
+                  </Link>
+                  <Link
+                    role="menuitem"
+                    tabIndex={-1}
+                    className="block rounded-xl px-3 py-2.5 text-sm text-foreground hover:bg-surface-secondary focus-visible:outline"
+                    href="/settings"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    role="menuitem"
+                    tabIndex={-1}
+                    className="w-full rounded-xl px-3 py-2.5 text-left text-sm text-danger-foreground hover:bg-surface-secondary"
+                    disabled={isSigningOut}
+                    onClick={() => {
+                      setProfileOpen(false);
+                      void handleSignOut();
+                    }}
+                  >
+                    {isSigningOut ? "Signing out…" : "Sign out"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </header>
         {realtimeUnavailable ? (
@@ -240,7 +563,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9">
           {signOutError ? (
             <p
-              className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
+              className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground"
               role="alert"
             >
               Could not sign out: {signOutError}
@@ -250,5 +573,90 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+  );
+}
+
+function NotificationPreviewRow({
+  notification,
+  expanded,
+  isPending,
+  onActivate,
+  onToggleExpanded,
+}: {
+  notification: Notification;
+  expanded: boolean;
+  isPending: boolean;
+  onActivate: () => void;
+  onToggleExpanded: () => void;
+}) {
+  const Icon = notificationIcons[notification.type];
+  const isLong = notification.message.length > notificationMessageLimit;
+  const notificationContent = (
+    <>
+      <span className="flex items-start justify-between gap-2">
+        <span className="text-xs font-semibold leading-5 text-foreground">
+          {notification.title}
+        </span>
+        {!notification.isRead ? (
+          <span
+            className="mt-1 size-2 shrink-0 rounded-full bg-danger-action"
+            aria-hidden="true"
+          />
+        ) : null}
+      </span>
+      <span
+        className={`mt-0.5 block text-xs leading-5 text-muted ${
+          isLong && !expanded ? "line-clamp-2" : ""
+        }`}
+      >
+        {notification.message}
+      </span>
+      <span className="mt-1.5 block text-[10px] text-muted">
+        {formatDate(notification.createdAt, {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })}
+        {isPending ? " · Marking as read…" : null}
+      </span>
+    </>
+  );
+
+  return (
+    <article
+      className={`flex gap-2 rounded-xl px-2 py-3 ${
+        notification.isRead ? "" : "bg-brand/[0.035]"
+      }`}
+    >
+      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
+        <Icon size={15} strokeWidth={1.8} />
+      </span>
+      <div className="min-w-0 flex-1">
+        {notification.isRead ? (
+          <div className="py-0.5">{notificationContent}</div>
+        ) : (
+          <button
+            type="button"
+            className="glass-interactive block w-full rounded-md py-0.5 text-left focus-visible:outline"
+            aria-label={`Mark ${notification.title} as read`}
+            disabled={isPending}
+            onClick={onActivate}
+          >
+            {notificationContent}
+          </button>
+        )}
+        {isLong ? (
+          <button
+            type="button"
+            className="glass-interactive mt-1 rounded px-1 py-0.5 text-xs font-medium text-foreground underline decoration-border underline-offset-2 hover:decoration-foreground focus-visible:outline"
+            aria-expanded={expanded}
+            onClick={onToggleExpanded}
+          >
+            Read {expanded ? "less" : "more"}
+          </button>
+        ) : null}
+      </div>
+    </article>
   );
 }

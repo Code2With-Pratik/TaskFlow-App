@@ -2,14 +2,14 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const badgeColors: Record<string, string> = {
-  TODO: "bg-danger/10 text-danger",
+  TODO: "bg-danger/10 text-danger-foreground",
   IN_PROGRESS: "bg-warning/10 text-warning",
   DONE: "bg-success/10 text-success",
   LOW: "bg-surface-secondary text-muted",
-  MEDIUM: "bg-warning/10 text-warning",
-  HIGH: "bg-danger/10 text-danger",
+  MEDIUM: "bg-surface-secondary text-foreground",
+  HIGH: "bg-surface-secondary text-foreground",
   OWNER: "bg-brand/10 text-brand",
-  ADMIN: "bg-warning/10 text-warning",
+  ADMIN: "bg-surface-secondary text-foreground",
   MEMBER: "bg-surface-secondary text-muted",
 };
 

@@ -173,7 +173,7 @@ export default function TaskDetailsPage() {
       </div>
 
       {actionError ? (
-        <p className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
+        <p className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground" role="alert">
           {actionError}
         </p>
       ) : null}
@@ -210,7 +210,7 @@ export default function TaskDetailsPage() {
                   aria-invalid={Boolean(errors.content)}
                   {...register("content")}
                 />
-                {errors.content ? <p className="text-xs text-danger">{errors.content.message}</p> : null}
+                {errors.content ? <p className="text-xs text-danger-foreground">{errors.content.message}</p> : null}
                 <div className="flex justify-end">
                   <Button type="submit" disabled={addComment.isPending}>
                     <Send size={14} />

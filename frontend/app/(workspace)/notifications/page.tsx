@@ -71,7 +71,7 @@ export default function NotificationsPage() {
         }
       />
       {markRead.error || markAllRead.error ? (
-        <p className="mb-4 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
+        <p className="mb-4 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground" role="alert">
           {getErrorMessage(markRead.error ?? markAllRead.error)}
         </p>
       ) : null}
