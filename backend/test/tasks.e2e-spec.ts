@@ -6,6 +6,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/config/configure-app.js';
+import { TaskReminderService } from '../src/notifications/task-reminder.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
 describe('Tasks, comments, and activity (e2e)', () => {
@@ -257,6 +258,28 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .expect(403);
   });
 
+  it('creates at most one overdue reminder per task each UTC day', async () => {
+    await prisma.task.update({
+      where: { id: taskId },
+      data: { dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
+    });
+
+    const reminderService = app.get(TaskReminderService);
+    await reminderService.createTaskReminders();
+    await reminderService.createTaskReminders();
+
+    const memberNotifications = await request(app.getHttpServer())
+      .get('/notifications')
+      .set('Authorization', authorization('member'))
+      .expect(200);
+    const overdueNotifications = memberNotifications.body.data.filter(
+      (notification: { type: string; message: string }) =>
+        notification.type === 'TASK_OVERDUE' &&
+        notification.message.includes('Prepare launch checklist'),
+    );
+    expect(overdueNotifications).toHaveLength(1);
+  });
+
   it('allows authorized comment moderation and protects task deletion', async () => {
     await request(app.getHttpServer())
       .delete(`/comments/${commentId}`)
@@ -283,4 +306,5 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .set('Authorization', `Bearer ${tokens.owner}`)
       .expect(404);
   });
+
 });

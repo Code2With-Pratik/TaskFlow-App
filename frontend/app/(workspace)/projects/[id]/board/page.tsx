@@ -17,7 +17,7 @@ import { PageHeading } from "@/components/ui/page-heading";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, getErrorMessage } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
-import type { PaginatedTasks, Project, Task, TaskPriority, TaskStatus } from "@/types/api";
+import type { PaginatedTasks, Project, ProjectMember, Task, TaskPriority, TaskStatus } from "@/types/api";
 
 const columns: Array<{ status: TaskStatus; label: string; tone: string }> = [
   { status: "TODO", label: "To do", tone: "bg-slate-400" },
@@ -28,6 +28,8 @@ const taskSchema = z.object({
   title: z.string().trim().min(1, "Enter a task title").max(200),
   description: z.string().max(5000, "Description is too long"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
+  assigneeId: z.string(),
+  dueDate: z.string(),
 });
 type TaskValues = z.infer<typeof taskSchema>;
 
@@ -45,6 +47,10 @@ export default function ProjectBoardPage() {
     queryFn: () =>
       apiFetch<PaginatedTasks>(`/tasks?projectId=${encodeURIComponent(id)}&limit=100`),
   });
+  const membersQuery = useQuery({
+    queryKey: ["project-members", id],
+    queryFn: () => apiFetch<ProjectMember[]>(`/projects/${id}/members`),
+  });
   const createTask = useMutation({
     mutationFn: (values: TaskValues) =>
       apiFetch<Task>("/tasks", {
@@ -53,6 +59,10 @@ export default function ProjectBoardPage() {
           projectId: id,
           title: values.title,
           description: values.description.trim() || undefined,
+          assigneeId: values.assigneeId || null,
+          dueDate: values.dueDate
+            ? new Date(`${values.dueDate}T23:59:59.999`).toISOString()
+            : null,
           priority: values.priority,
         }),
       }),
@@ -83,7 +93,13 @@ export default function ProjectBoardPage() {
     formState: { errors },
   } = useForm<TaskValues>({
     resolver: zodResolver(taskSchema),
-    defaultValues: { title: "", description: "", priority: "MEDIUM" },
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: "MEDIUM",
+      assigneeId: "",
+      dueDate: "",
+    },
   });
 
   async function invalidateBoard() {
@@ -95,10 +111,10 @@ export default function ProjectBoardPage() {
     ]);
   }
 
-  if (projectQuery.isLoading || tasksQuery.isLoading) {
+  if (projectQuery.isLoading || tasksQuery.isLoading || membersQuery.isLoading) {
     return <LoadingState label="Loading project board…" />;
   }
-  const pageError = projectQuery.error ?? tasksQuery.error;
+  const pageError = projectQuery.error ?? tasksQuery.error ?? membersQuery.error;
   if (pageError) {
     return (
       <ErrorState
@@ -106,11 +122,12 @@ export default function ProjectBoardPage() {
         onRetry={() => {
           void projectQuery.refetch();
           void tasksQuery.refetch();
+          void membersQuery.refetch();
         }}
       />
     );
   }
-  if (!projectQuery.data || !tasksQuery.data) {
+  if (!projectQuery.data || !tasksQuery.data || !membersQuery.data) {
     return <ErrorState error={new Error("Board data is missing.")} onRetry={() => void tasksQuery.refetch()} />;
   }
 
@@ -303,6 +320,26 @@ export default function ProjectBoardPage() {
                   ))}
                 </select>
               </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-foreground">Assignee</span>
+                <select
+                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+                  {...register("assigneeId")}
+                >
+                  <option value="">Unassigned</option>
+                  {membersQuery.data.map((member) => (
+                    <option key={member.user.id} value={member.user.id}>
+                      {member.user.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="task-due-date">
+                  Due date <span className="font-normal text-muted">· optional</span>
+                </label>
+                <Input id="task-due-date" type="date" {...register("dueDate")} />
+              </div>
               {actionError ? <p className="text-sm text-danger" role="alert">{actionError}</p> : null}
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="secondary" disabled={createTask.isPending} onClick={() => setDialogOpen(false)}>

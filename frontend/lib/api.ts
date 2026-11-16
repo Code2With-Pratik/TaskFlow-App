@@ -21,6 +21,14 @@ export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
+export function getApiBaseUrl(): string {
+  return API_URL;
+}
+
 export async function refreshSession(): Promise<AuthSession | null> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {

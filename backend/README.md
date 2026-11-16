@@ -23,7 +23,7 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Production-oriented API for the TaskFlow project and task management app.
 
 ## TaskFlow backend
 
@@ -77,11 +77,20 @@ credentialed requests to the configured API origin.
 | Comments | `POST/GET /tasks/:taskId/comments`, `DELETE /comments/:id` |
 | Activity | `GET /projects/:projectId/activities` |
 | Dashboard | `GET /dashboard/summary` |
+| Notifications | `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all` |
 
 Every project or task query is scoped to the caller's project memberships.
 Project role guards protect owner/admin operations; task assignees must already
 be project members. Comments and project activities are persisted in
 PostgreSQL.
+
+Task assignments, status changes, comments, and project invitations create
+persisted notifications. The authenticated Socket.IO namespace
+`/notifications` accepts the short-lived access token in the connection
+`auth.token` field and emits `notification:new` to the owning user's room.
+Connections are disconnected when that token expires. Daily reminders run at
+08:00 UTC for assigned tasks due within 24 hours or already overdue; duplicate
+reminders for the same task and day are suppressed.
 
 ## NestJS concepts in this backend
 

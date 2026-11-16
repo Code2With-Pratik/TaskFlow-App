@@ -3,9 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
-  CalendarDays,
   Check,
-  CircleUserRound,
   MessageSquare,
   Send,
   Trash2,
@@ -23,7 +21,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate, fromDateInputValue, initials, toDateInputValue } from "@/lib/format";
 import type { Comment, ProjectMember, Task, TaskPriority, TaskStatus } from "@/types/api";
 
 const commentSchema = z.object({
@@ -62,7 +60,11 @@ export default function TaskDetailsPage() {
   } = useForm<CommentValues>({ resolver: zodResolver(commentSchema) });
 
   const updateTask = useMutation({
-    mutationFn: (updates: Partial<Pick<Task, "status" | "priority">>) =>
+    mutationFn: (
+      updates: Partial<
+        Pick<Task, "status" | "priority" | "assigneeId" | "dueDate">
+      >,
+    ) =>
       apiFetch<Task>(`/tasks/${id}`, {
         method: "PATCH",
         body: JSON.stringify(updates),
@@ -270,15 +272,40 @@ export default function TaskDetailsPage() {
               </label>
               <div>
                 <span className="mb-2 block text-xs font-medium text-muted">Assignee</span>
-                <span className="flex items-center gap-2 text-sm text-foreground">
-                  <CircleUserRound className="text-muted" size={16} />
-                  {task.assignee?.name ?? "Unassigned"}
-                </span>
+                <select
+                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
+                  aria-label="Task assignee"
+                  value={task.assigneeId ?? ""}
+                  disabled={updateTask.isPending}
+                  onChange={(event) =>
+                    updateTask.mutate({ assigneeId: event.target.value || null })
+                  }
+                >
+                  <option value="">Unassigned</option>
+                  {membersQuery.data.map((member) => (
+                    <option key={member.user.id} value={member.user.id}>
+                      {member.user.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div>
-                <span className="mb-2 block text-xs font-medium text-muted">Due date</span>
-                <span className="flex items-center gap-2 text-sm text-foreground">
-                  <CalendarDays className="text-muted" size={16} />
+              <div className="block">
+                <label className="mb-2 block text-xs font-medium text-muted" htmlFor="task-due-date">
+                  Due date
+                </label>
+                <input
+                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
+                  id="task-due-date"
+                  type="date"
+                  value={toDateInputValue(task.dueDate)}
+                  disabled={updateTask.isPending}
+                  onChange={(event) =>
+                    updateTask.mutate({
+                      dueDate: fromDateInputValue(event.target.value),
+                    })
+                  }
+                />
+                <span className="sr-only">
                   {task.dueDate ? formatDate(task.dueDate) : "No due date"}
                 </span>
               </div>

@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import { createHash, randomUUID } from 'node:crypto';
-import { JsonWebTokenError } from 'jsonwebtoken';
+import jsonwebtoken from 'jsonwebtoken';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { LoginDto } from './dto/login.dto.js';
@@ -207,7 +207,7 @@ export class AuthService {
         secret: this.refreshSecret,
       });
     } catch (error) {
-      if (error instanceof JsonWebTokenError) {
+      if (error instanceof jsonwebtoken.JsonWebTokenError) {
         throw new UnauthorizedException('Refresh token is invalid or expired');
       }
 

@@ -1,17 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, Menu, Moon, Sun, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { io } from "socket.io-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { initials } from "@/lib/format";
 import { useAuth } from "@/app/auth-provider";
 import { useTheme } from "@/app/theme-provider";
-import { getErrorMessage } from "@/lib/api";
-import { apiFetch } from "@/lib/api";
+import {
+  apiFetch,
+  getAccessToken,
+  getApiBaseUrl,
+  getErrorMessage,
+  refreshSession,
+} from "@/lib/api";
 import type { NotificationList } from "@/types/api";
 
 const pageTitles: Record<string, string> = {
@@ -27,10 +34,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [realtimeUnavailable, setRealtimeUnavailable] = useState(false);
   const { data: notifications } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => apiFetch<NotificationList>("/notifications"),
@@ -39,6 +48,65 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const title =
     pageTitles[pathname] ??
     (pathname.includes("/board") ? "Project board" : "Project");
+
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+    let socket: ReturnType<typeof io> | null = null;
+
+    async function connect() {
+      let token = getAccessToken();
+      if (!token) {
+        try {
+          const session = await refreshSession();
+          token = session?.accessToken ?? null;
+        } catch {
+          if (active) setRealtimeUnavailable(true);
+          return;
+        }
+      }
+      if (!active) return;
+      if (!token) {
+        setRealtimeUnavailable(true);
+        return;
+      }
+
+      socket = io(`${getApiBaseUrl()}/notifications`, {
+        auth: { token },
+        withCredentials: true,
+      });
+      socket.on("connect", () => setRealtimeUnavailable(false));
+      socket.on("connect_error", () => setRealtimeUnavailable(true));
+      socket.on("notification:new", () => {
+        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        void queryClient.invalidateQueries({ queryKey: ["project-tasks"] });
+        void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        void queryClient.invalidateQueries({ queryKey: ["project-activities"] });
+      });
+      socket.on("disconnect", (reason) => {
+        setRealtimeUnavailable(true);
+        if (reason === "io server disconnect") {
+          void refreshSession()
+            .then((session) => {
+              if (!active || !session || !socket) return;
+              socket.auth = { token: session.accessToken };
+              socket.connect();
+            })
+            .catch(() => {
+              if (active) setRealtimeUnavailable(true);
+            });
+        }
+      });
+    }
+
+    void connect();
+    return () => {
+      active = false;
+      socket?.disconnect();
+    };
+  }, [queryClient, user]);
 
   async function handleSignOut() {
     setSignOutError(null);
@@ -161,6 +229,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </details>
           </div>
         </header>
+        {realtimeUnavailable ? (
+          <p
+            className="border-b border-warning/20 bg-warning/5 px-4 py-2 text-center text-xs text-warning"
+            role="status"
+          >
+            Live updates are unavailable. The inbox will refresh automatically.
+          </p>
+        ) : null}
         <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9">
           {signOutError ? (
             <p

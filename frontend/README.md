@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TaskFlow frontend
 
-## Getting Started
+TaskFlow is a responsive project and task workspace built with Next.js 16,
+React 19, TypeScript, Tailwind CSS, and TanStack Query.
 
-First, run the development server:
+## Run locally
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Start PostgreSQL and the API using the steps in [the backend README](../backend/README.md).
+2. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_API_URL` to the backend URL.
+3. Install dependencies and start the frontend:
+
+   ```powershell
+   npm install
+   npm run dev -- --port 3001
+   ```
+
+Open [http://localhost:3001](http://localhost:3001). The root page redirects to
+the protected dashboard. Register an account or sign in to continue.
+
+## Main screens
+
+- `/login` and `/register` — validated authentication forms.
+- `/dashboard` — workspace statistics, deadlines, activity, and projects.
+- `/projects` and `/projects/:id` — create projects, manage members, and review work.
+- `/projects/:id/board` — drag tasks between status columns or change status accessibly.
+- `/tasks` and `/tasks/:id` — filter tasks, update status and priority, and discuss work.
+- `/notifications` — review and mark persisted notifications as read.
+- `/profile` and `/settings` — update your profile and select the light or dark theme.
+
+## Authentication and data
+
+The API client keeps the access token in memory only. Refresh tokens remain in
+the API's HttpOnly cookie; the browser never writes either token to local
+storage. API requests include credentials and retry once after refreshing an
+expired access token. Socket.IO uses the in-memory access token for authenticated
+live notifications and task refreshes, with periodic notification polling as a
+fallback.
+
+The light and dark CSS variables in `app/globals.css` implement the TaskFlow
+palette. The theme choice is stored locally as a display preference, not as
+authentication data.
+
+## Checks
+
+```powershell
+npm run lint
+npm run build
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

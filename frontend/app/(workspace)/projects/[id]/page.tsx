@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -41,6 +41,7 @@ type EditProjectValues = z.infer<typeof editProjectSchema>;
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
@@ -124,6 +125,26 @@ export default function ProjectDetailsPage() {
     },
     onError: (error) => setActionError(getErrorMessage(error)),
   });
+  const updateMemberRole = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: ProjectRole }) =>
+      apiFetch<void>(`/projects/${id}/members/${userId}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project-members", id] }),
+    onError: (error) => setActionError(getErrorMessage(error)),
+  });
+  const deleteProject = useMutation({
+    mutationFn: () => apiFetch<void>(`/projects/${id}`, { method: "DELETE" }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["projects"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
+      router.replace("/projects");
+    },
+    onError: (error) => setActionError(getErrorMessage(error)),
+  });
   const {
     register: registerMember,
     handleSubmit: handleMemberSubmit,
@@ -170,6 +191,34 @@ export default function ProjectDetailsPage() {
         description={project.description || "A focused space for your team's work."}
         action={
           <div className="flex items-center gap-2">
+            {!isOwner && currentMembership ? (
+              <Button
+                variant="secondary"
+                disabled={removeMember.isPending}
+                onClick={() => {
+                  if (window.confirm(`Leave "${project.name}"?`)) {
+                    removeMember.mutate(currentMembership.user.id, {
+                      onSuccess: () => router.replace("/projects"),
+                    });
+                  }
+                }}
+              >
+                Leave project
+              </Button>
+            ) : null}
+            {isOwner ? (
+              <Button
+                variant="danger"
+                disabled={deleteProject.isPending}
+                onClick={() => {
+                  if (window.confirm(`Delete "${project.name}" and all of its tasks?`)) {
+                    deleteProject.mutate();
+                  }
+                }}
+              >
+                <Trash2 size={15} /> Delete
+              </Button>
+            ) : null}
             {canManage ? (
               <Button
                 variant="secondary"
@@ -307,6 +356,23 @@ export default function ProjectDetailsPage() {
                       <span className="block truncate text-[10px] text-muted">{member.user.email}</span>
                     </span>
                     <Badge>{member.role}</Badge>
+                    {isOwner && member.role !== "OWNER" ? (
+                      <select
+                        aria-label={`Role for ${member.user.name}`}
+                        className="h-8 rounded-lg border border-border bg-surface px-2 text-[10px] text-muted outline-none focus:border-brand"
+                        value={member.role}
+                        disabled={updateMemberRole.isPending}
+                        onChange={(event) =>
+                          updateMemberRole.mutate({
+                            userId: member.user.id,
+                            role: event.target.value as ProjectRole,
+                          })
+                        }
+                      >
+                        <option value="MEMBER">Member</option>
+                        <option value="ADMIN">Admin</option>
+                      </select>
+                    ) : null}
                     {member.role !== "OWNER" && (isOwner || (canManage && member.role === "MEMBER")) ? (
                       <button
                         aria-label={`Remove ${member.user.name}`}
