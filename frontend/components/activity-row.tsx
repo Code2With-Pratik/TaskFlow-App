@@ -1,4 +1,4 @@
-import { ArrowUpRight, CircleCheck, MessageCircle, Plus, RefreshCw } from "lucide-react";
+import { ArrowUpRight, CircleCheck, MessageCircle, Plus, RefreshCw } from "@/components/animated-icons";
 import { formatDate, initials } from "@/lib/format";
 import type { Activity } from "@/types/api";
 

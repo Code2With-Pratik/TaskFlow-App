@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, MessageSquare } from "lucide-react";
+import { CalendarDays, MessageSquare } from "@/components/animated-icons";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, initials } from "@/lib/format";
 import type { Task } from "@/types/api";

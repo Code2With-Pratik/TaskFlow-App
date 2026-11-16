@@ -10,7 +10,7 @@ import {
   Settings2,
   Users,
   Workflow,
-} from "lucide-react";
+} from "@/components/animated-icons";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";

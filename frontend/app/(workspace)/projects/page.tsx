@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowUpRight, FolderKanban, Plus, Users } from "lucide-react";
+import { ArrowUpRight, FolderKanban, Plus, Users } from "@/components/animated-icons";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

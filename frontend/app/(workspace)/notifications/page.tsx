@@ -9,7 +9,7 @@ import {
   Clock3,
   TriangleAlert,
   UserRoundPlus,
-} from "lucide-react";
+} from "@/components/animated-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { Badge } from "@/components/ui/badge";

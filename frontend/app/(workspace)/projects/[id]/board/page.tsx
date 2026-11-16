@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, CalendarDays, CirclePlus, ExternalLink, Plus } from "lucide-react";
+import { ArrowLeft, CalendarDays, CirclePlus, ExternalLink, Plus } from "@/components/animated-icons";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";

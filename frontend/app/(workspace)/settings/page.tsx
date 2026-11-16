@@ -1,6 +1,6 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "@/components/animated-icons";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageHeading } from "@/components/ui/page-heading";
 import { useTheme } from "@/app/theme-provider";

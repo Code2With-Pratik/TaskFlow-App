@@ -16,8 +16,8 @@ import {
   TriangleAlert,
   UserRoundPlus,
   X,
-  type LucideIcon,
-} from "lucide-react";
+  type AnimatedIcon,
+} from "@/components/animated-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -38,7 +38,7 @@ import type {
   NotificationType,
 } from "@/types/api";
 
-const notificationIcons: Record<NotificationType, LucideIcon> = {
+const notificationIcons: Record<NotificationType, AnimatedIcon> = {
   TASK_ASSIGNED: UserRoundPlus,
   TASK_STATUS_UPDATED: Check,
   COMMENT_ADDED: MessageSquareText,

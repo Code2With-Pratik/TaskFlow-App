@@ -10,7 +10,7 @@ import {
   FolderKanban,
   ListTodo,
   Plus,
-} from "lucide-react";
+} from "@/components/animated-icons";
 import { useQuery } from "@tanstack/react-query";
 import { ActivityRow } from "@/components/activity-row";
 import { ErrorState, LoadingState } from "@/components/query-state";

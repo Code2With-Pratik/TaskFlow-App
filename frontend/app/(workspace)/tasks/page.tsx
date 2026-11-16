@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "lucide-react";
+import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "@/components/animated-icons";
 import { useDeferredValue, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";

@@ -1,4 +1,4 @@
-import { AlertCircle, LoaderCircle } from "lucide-react";
+import { AlertCircle, LoaderCircle } from "@/components/animated-icons";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/api";
 

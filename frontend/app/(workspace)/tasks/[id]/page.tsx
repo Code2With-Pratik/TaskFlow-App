@@ -11,7 +11,7 @@ import {
   Send,
   Trash2,
   X,
-} from "lucide-react";
+} from "@/components/animated-icons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ClipboardEvent } from "react";

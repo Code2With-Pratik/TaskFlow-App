@@ -11,7 +11,7 @@ import {
   Trash2,
   Users,
   X,
-} from "lucide-react";
+} from "@/components/animated-icons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
