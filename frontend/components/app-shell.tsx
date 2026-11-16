@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -74,6 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     () => new Set(),
   );
   const notificationAreaRef = useRef<HTMLDivElement>(null);
+  const notificationPopoverRef = useRef<HTMLElement>(null);
   const notificationTriggerRef = useRef<HTMLButtonElement>(null);
   const profileAreaRef = useRef<HTMLDivElement>(null);
   const profileTriggerRef = useRef<HTMLButtonElement>(null);
@@ -137,7 +139,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!(target instanceof Node)) return;
       if (
         notificationOpen &&
-        !notificationAreaRef.current?.contains(target)
+        !notificationAreaRef.current?.contains(target) &&
+        !notificationPopoverRef.current?.contains(target)
       ) {
         setNotificationOpen(false);
       }
@@ -319,14 +322,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-surface bg-danger-action" />
                 ) : null}
               </Button>
-              {notificationOpen ? (
-                <section
-                  id="notification-preview"
-                  aria-labelledby="notification-preview-title"
-                  aria-busy={notificationsQuery.isLoading || markNotificationRead.isPending}
-                  className="glass-panel notification-popover absolute right-0 top-full z-30 mt-2 flex flex-col overflow-hidden rounded-2xl border border-glass-edge shadow-2xl shadow-black/15"
-                  role="dialog"
-                >
+              {notificationOpen && typeof document !== "undefined"
+                ? createPortal(
+                    <section
+                      ref={notificationPopoverRef}
+                      id="notification-preview"
+                      aria-labelledby="notification-preview-title"
+                      aria-busy={notificationsQuery.isLoading || markNotificationRead.isPending}
+                      className="glass-panel notification-popover fixed z-40 flex flex-col overflow-hidden rounded-2xl border border-glass-edge shadow-2xl shadow-black/20"
+                      style={{
+                        position: "fixed",
+                        top: "calc(4.25rem + env(safe-area-inset-top, 0px))",
+                        right: "max(0.75rem, env(safe-area-inset-right, 0px))",
+                        width: "min(24rem, calc(100vw - 1.5rem))",
+                      }}
+                      role="dialog"
+                    >
                   <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3.5">
                     <div className="min-w-0">
                       <h2
@@ -439,8 +450,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       View all notifications
                     </Link>
                   </div>
-                </section>
-              ) : null}
+                    </section>,
+                    document.body,
+                  )
+                : null}
             </div>
 
             <div className="relative ml-1" ref={profileAreaRef}>

@@ -2,7 +2,7 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const badgeColors: Record<string, string> = {
-  TODO: "bg-danger/10 text-danger-foreground",
+  TODO: "bg-danger/10 text-danger-foreground ring-1 ring-danger/20",
   IN_PROGRESS: "bg-warning/10 text-warning",
   DONE: "bg-success/10 text-success",
   LOW: "bg-surface-secondary text-muted",

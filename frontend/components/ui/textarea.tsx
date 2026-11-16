@@ -8,7 +8,7 @@ export function Textarea({
   return (
     <textarea
       className={cn(
-        "min-h-28 w-full resize-y rounded-xl border border-border bg-surface px-3.5 py-3 text-sm text-foreground placeholder:text-muted/70 focus:border-brand focus:outline-none",
+        "min-h-28 w-full resize-y rounded-xl border border-border bg-surface px-3.5 py-3 text-base text-foreground placeholder:text-muted/70 focus:border-brand focus:outline-none sm:text-sm",
         className,
       )}
       {...props}
