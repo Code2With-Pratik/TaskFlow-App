@@ -27,6 +27,9 @@ TaskFlow is a project and task workspace with a Next.js frontend, NestJS API,
 and PostgreSQL database. The frontend is served on port `3001` and the API on
 port `3000`.
 
+For the full production deployment walkthrough, see
+[DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## Run the full stack with Docker Compose
 
 1. Copy `.env.docker.example` to `.env.docker`.
@@ -101,50 +104,42 @@ uses `SameSite=None; Secure`. Browsers that block third-party cookies may
 restrict refresh-token persistence; custom frontend and API hostnames under
 the same site are the most reliable long-term setup.
 
-## Project setup
+## Run and test locally
 
-```bash
-$ npm install
+The easiest way to start the API, PostgreSQL, and frontend together is the
+Docker Compose flow above. For separate development servers, start PostgreSQL,
+then run these commands in separate terminals from the repository root:
+
+```powershell
+Set-Location .\backend
+npm ci
+npm run db:generate
+npm run start:dev
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```powershell
+Set-Location .\frontend
+npm ci
+npm run dev -- --port 3001
 ```
 
-## Run tests
+Backend checks (run from `backend/`):
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```powershell
+npm run build
+npm run lint
+npm test
+npm run test:e2e
 ```
 
-## Deployment
+Frontend checks (run from `frontend/`):
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```powershell
+npm run lint
+npm run build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+For production deployment, follow [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Observability
 

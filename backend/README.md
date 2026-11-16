@@ -59,7 +59,8 @@ The public `GET /health` endpoint returns `{ "status": "ok", "timestamp":
 
 - `POST /auth/register` and `POST /auth/login` return a short-lived access
   token and a safe user profile. The refresh token is only set in an
-  HttpOnly, SameSite=Lax cookie scoped to `/auth`.
+  HttpOnly cookie scoped to `/auth` (`SameSite=Lax` locally and
+  `SameSite=None; Secure` in production for cross-site Vercel/Render requests).
 - `POST /auth/refresh` verifies the refresh token, atomically rotates its
   stored SHA-256 hash, and rejects reused tokens.
 - `POST /auth/logout` revokes the active refresh token and clears its cookie.
