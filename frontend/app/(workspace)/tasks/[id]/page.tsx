@@ -18,6 +18,7 @@ import { ErrorState, LoadingState } from "@/components/query-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
@@ -28,6 +29,12 @@ const commentSchema = z.object({
   content: z.string().trim().min(1, "Write a comment first").max(2000, "Comment is too long"),
 });
 type CommentValues = z.infer<typeof commentSchema>;
+type ConfirmationRequest = {
+  title: string;
+  description?: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+};
 
 const statuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
 const priorities: TaskPriority[] = ["LOW", "MEDIUM", "HIGH"];
@@ -38,6 +45,7 @@ export default function TaskDetailsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
   const taskQuery = useQuery({
     queryKey: ["task", id],
     queryFn: () => apiFetch<Task>(`/tasks/${id}`),
@@ -161,9 +169,12 @@ export default function TaskDetailsPage() {
             variant="danger"
             disabled={deleteTask.isPending}
             onClick={() => {
-              if (window.confirm(`Delete "${task.title}"? This cannot be undone.`)) {
-                deleteTask.mutate();
-              }
+              setConfirmation({
+                title: `Delete "${task.title}"?`,
+                description: "This cannot be undone.",
+                confirmLabel: "Delete task",
+                onConfirm: () => deleteTask.mutate(),
+              });
             }}
           >
             <Trash2 size={15} />
@@ -332,6 +343,18 @@ export default function TaskDetailsPage() {
           </div>
         </aside>
       </div>
+      <ConfirmDialog
+        confirmLabel={confirmation?.confirmLabel ?? "Confirm"}
+        description={confirmation?.description}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={() => {
+          if (!confirmation) return;
+          setConfirmation(null);
+          confirmation.onConfirm();
+        }}
+        open={Boolean(confirmation)}
+        title={confirmation?.title ?? ""}
+      />
     </div>
   );
 }

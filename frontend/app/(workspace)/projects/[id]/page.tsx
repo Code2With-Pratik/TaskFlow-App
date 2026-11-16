@@ -24,6 +24,7 @@ import { TaskRow } from "@/components/task-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { PageHeading } from "@/components/ui/page-heading";
@@ -38,6 +39,12 @@ const editProjectSchema = z.object({
   description: z.string().max(2000, "Description is too long"),
 });
 type EditProjectValues = z.infer<typeof editProjectSchema>;
+type ConfirmationRequest = {
+  title: string;
+  description?: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+};
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +53,7 @@ export default function ProjectDetailsPage() {
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
   const projectQuery = useQuery({
     queryKey: ["project", id],
     queryFn: () => apiFetch<Project>(`/projects/${id}`),
@@ -196,11 +204,15 @@ export default function ProjectDetailsPage() {
                 variant="danger"
                 disabled={removeMember.isPending}
                 onClick={() => {
-                  if (window.confirm(`Leave "${project.name}"?`)) {
-                    removeMember.mutate(currentMembership.user.id, {
-                      onSuccess: () => router.replace("/projects"),
-                    });
-                  }
+                  setConfirmation({
+                    title: `Leave "${project.name}"?`,
+                    confirmLabel: "Leave project",
+                    onConfirm: () => {
+                      removeMember.mutate(currentMembership.user.id, {
+                        onSuccess: () => router.replace("/projects"),
+                      });
+                    },
+                  });
                 }}
               >
                 Leave project
@@ -211,9 +223,12 @@ export default function ProjectDetailsPage() {
                 variant="danger"
                 disabled={deleteProject.isPending}
                 onClick={() => {
-                  if (window.confirm(`Delete "${project.name}" and all of its tasks?`)) {
-                    deleteProject.mutate();
-                  }
+                  setConfirmation({
+                    title: `Delete "${project.name}" and all of its tasks?`,
+                    description: "This action cannot be undone.",
+                    confirmLabel: "Delete project",
+                    onConfirm: () => deleteProject.mutate(),
+                  });
                 }}
               >
                 <Trash2 size={15} /> Delete
@@ -379,9 +394,11 @@ export default function ProjectDetailsPage() {
                         className="glass-interactive grid size-9 place-items-center rounded-lg bg-danger-action text-white hover:bg-red-700 focus-visible:outline"
                         disabled={removeMember.isPending}
                         onClick={() => {
-                          if (window.confirm(`Remove ${member.user.name} from this project?`)) {
-                            removeMember.mutate(member.user.id);
-                          }
+                          setConfirmation({
+                            title: `Remove ${member.user.name} from this project?`,
+                            confirmLabel: "Remove member",
+                            onConfirm: () => removeMember.mutate(member.user.id),
+                          });
                         }}
                         type="button"
                       >
@@ -441,6 +458,18 @@ export default function ProjectDetailsPage() {
           </Card>
         </div>
       </section>
+      <ConfirmDialog
+        confirmLabel={confirmation?.confirmLabel ?? "Confirm"}
+        description={confirmation?.description}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={() => {
+          if (!confirmation) return;
+          setConfirmation(null);
+          confirmation.onConfirm();
+        }}
+        open={Boolean(confirmation)}
+        title={confirmation?.title ?? ""}
+      />
     </div>
   );
 }
