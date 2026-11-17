@@ -7,6 +7,12 @@ import {
   isKnownAppPath,
   notFoundMarkdown,
 } from "./agent-content.mjs";
+import { agentGuidance } from "./agent-guidance.mjs";
+import {
+  aboutContent,
+  contactContent,
+  privacyContent,
+} from "./trust-content.mjs";
 
 test("accepts explicit Markdown media ranges with a positive quality", () => {
   assert.equal(acceptsMarkdown("text/markdown"), true);
@@ -59,7 +65,30 @@ test("unknown Markdown paths return linked 404 responses", async () => {
 test("HTML requests and known page paths continue to Next.js", () => {
   assert.equal(createAgentMarkdownResponse("/", "GET", "text/html"), null);
   assert.equal(
-    createAgentMarkdownResponse("/login", "GET", "text/markdown"),
+    createAgentMarkdownResponse("/developers/api", "GET", "text/markdown"),
     null,
   );
+});
+
+test("agent guidance defines use cases, authorization, and unavailable tools", () => {
+  assert.match(agentGuidance, /When to use TaskFlow/);
+  assert.match(agentGuidance, /project planning and day-to-day team task coordination/);
+  assert.match(agentGuidance, /never write or delete workspace data without the user's clear instruction/);
+  assert.match(agentGuidance, /does not currently publish an MCP server, SDK, or command-line tool/);
+});
+
+test("About, Contact, and Privacy pages each provide a substantive trust anchor", () => {
+  for (const page of [aboutContent, contactContent, privacyContent]) {
+    const text = [
+      page.title,
+      page.intro,
+      ...page.sections.flatMap((section) => [
+        section.heading,
+        ...section.paragraphs,
+      ]),
+    ].join(" ");
+
+    assert.ok(text.length >= 500, `${page.title} has ${text.length} characters`);
+  }
+  assert.match(privacyContent.sections.flatMap((section) => section.paragraphs).join(" "), /Vercel Web Analytics and Speed Insights/);
 });

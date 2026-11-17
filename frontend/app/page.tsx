@@ -1,10 +1,6 @@
 import Link from "next/link";
+import { apiDocsUrl } from "../lib/api-docs";
 import { siteUrl } from "../lib/site";
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
-const apiDocsUrl = apiBaseUrl
-  ? `${apiBaseUrl}/api/docs`
-  : "https://github.com/Code2With-Pratik/TaskFlow-App/tree/main/backend";
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -34,13 +30,11 @@ const structuredData = {
         name: "Pratik Dhandare",
       },
       keywords:
-        "project management software, task management, team collaboration, project planning, task tracking",
+        "TaskFlow task management, TaskFlow project planning, project management software, team collaboration, task tracking",
       knowsAbout: [
-        "Project management",
-        "Task management",
+        "TaskFlow task management",
+        "TaskFlow project planning",
         "Team collaboration",
-        "Project planning",
-        "Task tracking",
         "TaskFlow API",
       ],
     },
@@ -83,13 +77,13 @@ export default function Home() {
       <div className="flex flex-1 flex-col justify-center py-16 sm:py-24">
         <section aria-labelledby="hero-title" className="max-w-3xl">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-muted">
-            Project and task management
+            Make meaningful work move forward
           </p>
           <h1
             id="hero-title"
             className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl"
           >
-            Make meaningful work move forward.
+            TaskFlow task management and project planning
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
             TaskFlow is project management software for teams that want a
@@ -199,6 +193,14 @@ export default function Home() {
               </a>
             </li>
             <li>
+              <Link
+                className="font-medium underline underline-offset-4"
+                href="/developers/api"
+              >
+                TaskFlow API documentation
+              </Link>
+            </li>
+            <li>
               <a
                 className="font-medium underline underline-offset-4"
                 href="https://github.com/Code2With-Pratik/TaskFlow-App"
@@ -222,14 +224,25 @@ export default function Home() {
 
       <footer className="flex flex-col gap-2 border-t border-border pt-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
         <p>TaskFlow by Pratik Dhandare · Code2WithPratik</p>
-        <a
-          href="https://github.com/Code2With-Pratik"
-          target="_blank"
-          rel="noreferrer"
-          className="underline underline-offset-4"
-        >
-          GitHub: Code2With-Pratik
-        </a>
+        <nav aria-label="Company information" className="flex flex-wrap gap-4">
+          <Link href="/about" className="underline underline-offset-4">
+            About
+          </Link>
+          <Link href="/contact" className="underline underline-offset-4">
+            Contact
+          </Link>
+          <Link href="/privacy" className="underline underline-offset-4">
+            Privacy
+          </Link>
+          <a
+            href="https://github.com/Code2With-Pratik"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-4"
+          >
+            GitHub: Code2With-Pratik
+          </a>
+        </nav>
       </footer>
     </main>
   );

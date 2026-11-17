@@ -14,8 +14,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default:
-      "TaskFlow by Pratik Dhandare | Project and Task Management",
+    default: "TaskFlow Task Management & Project Planning | Pratik Dhandare",
     template: "%s · TaskFlow",
   },
   description:
@@ -39,15 +38,24 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "TaskFlow",
-    title: "TaskFlow by Pratik Dhandare | Project and Task Management",
+    title: "TaskFlow Task Management & Project Planning | Pratik Dhandare",
     description:
       "Plan projects, coordinate tasks, and follow team progress with TaskFlow, by Pratik Dhandare (Code2WithPratik).",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "TaskFlow project and task management by Pratik Dhandare",
+      },
+    ],
   },
   twitter: {
     card: "summary",
     title: "TaskFlow by Pratik Dhandare",
     description:
       "Project and task management software for teams. Built by Code2WithPratik.",
+    images: ["/opengraph-image"],
   },
 };
 
