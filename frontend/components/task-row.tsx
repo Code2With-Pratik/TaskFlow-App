@@ -3,7 +3,7 @@ import { CalendarDays, MessageSquare } from "@/components/animated-icons";
 import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
-import { UserAvatar } from "@/components/ui/user-avatar";
+import { AssigneeAvatar } from "@/components/assignee-avatar";
 import type { Task } from "@/types/api";
 
 export function TaskRow({ task }: { task: Task }) {
@@ -50,13 +50,7 @@ export function TaskRow({ task }: { task: Task }) {
           {task.assignees.length ? (
             <span className="flex -space-x-2">
               {task.assignees.map((assignee) => (
-                <UserAvatar
-                  key={assignee.id}
-                  className="size-7 border-2 border-surface"
-                  title={assignee.name}
-                  name={assignee.name}
-                  avatar={assignee.avatar}
-                />
+                <AssigneeAvatar key={assignee.id} user={assignee} />
               ))}
             </span>
           ) : null}

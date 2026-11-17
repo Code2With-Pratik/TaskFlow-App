@@ -123,6 +123,12 @@ describe('Tasks, comments, and activity (e2e)', () => {
     );
     expect(assignedToMultiple.body.assignees).toHaveLength(2);
 
+    await request(app.getHttpServer())
+      .patch(`/tasks/${taskId}`)
+      .set('Authorization', authorization('member'))
+      .send({ assigneeIds: [member.id] })
+      .expect(403);
+
     const listed = await request(app.getHttpServer())
       .get('/tasks')
       .query({ projectId, search: 'launch checklist', page: 1, limit: 5 })

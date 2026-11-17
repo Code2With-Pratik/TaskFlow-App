@@ -51,7 +51,9 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   project: Pick<Project, "id" | "name">;
-  assignees: Array<Pick<User, "id" | "name" | "email" | "avatar">>;
+  assignees: Array<
+    Pick<User, "id" | "name" | "email" | "avatar" | "designation">
+  >;
   createdBy: Pick<User, "id" | "name" | "email" | "avatar">;
   _count?: { comments: number };
 }

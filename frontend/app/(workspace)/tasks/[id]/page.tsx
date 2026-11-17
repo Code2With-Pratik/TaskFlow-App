@@ -278,6 +278,8 @@ export default function TaskDetailsPage() {
     task.createdById === user?.id ||
     membership?.role === "OWNER" ||
     membership?.role === "ADMIN";
+  const canAssignTasks =
+    membership?.role === "OWNER" || membership?.role === "ADMIN";
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -509,7 +511,8 @@ export default function TaskDetailsPage() {
               <AssigneePicker
                 members={membersQuery.data}
                 selectedIds={task.assigneeIds}
-                disabled={updateTask.isPending}
+                disabled={updateTask.isPending || !canAssignTasks}
+                disabledHint="Only project owners and admins can change assignees."
                 onChange={(assigneeIds) =>
                   updateTask.mutate({ assigneeIds })
                 }

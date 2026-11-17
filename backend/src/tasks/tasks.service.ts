@@ -18,7 +18,15 @@ const taskRelations = {
   assignees: {
     select: {
       userId: true,
-      user: { select: { id: true, name: true, email: true, avatar: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          designation: true,
+        },
+      },
     },
   },
   createdBy: { select: { id: true, name: true, email: true, avatar: true } },
@@ -48,6 +56,12 @@ export class TasksService {
 
   async create(userId: string, dto: CreateTaskDto) {
     await this.projectAccess.requireMembership(dto.projectId, userId);
+    if (dto.assigneeIds?.length) {
+      await this.projectAccess.requireRoles(dto.projectId, userId, [
+        ProjectRole.OWNER,
+        ProjectRole.ADMIN,
+      ]);
+    }
     await this.assertAssigneesAreMembers(dto.projectId, dto.assigneeIds);
 
     const task = await this.prisma.$transaction(async (transaction) => {
@@ -184,6 +198,10 @@ export class TasksService {
 
     await this.projectAccess.requireMembership(existing.projectId, userId);
     if (dto.assigneeIds !== undefined) {
+      await this.projectAccess.requireRoles(existing.projectId, userId, [
+        ProjectRole.OWNER,
+        ProjectRole.ADMIN,
+      ]);
       await this.assertAssigneesAreMembers(existing.projectId, dto.assigneeIds);
     }
 

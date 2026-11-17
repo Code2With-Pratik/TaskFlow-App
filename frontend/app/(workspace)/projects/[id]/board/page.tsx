@@ -8,7 +8,9 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/app/auth-provider";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { AssigneeAvatar } from "@/components/assignee-avatar";
 import { AssigneePicker } from "@/components/assignee-picker";
 import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeading } from "@/components/ui/page-heading";
-import { UserAvatar } from "@/components/ui/user-avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, getErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -38,6 +39,7 @@ type TaskValues = z.infer<typeof taskSchema>;
 
 export default function ProjectBoardPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -141,6 +143,11 @@ export default function ProjectBoardPage() {
   }
 
   const tasks = tasksQuery.data.data;
+  const membership = membersQuery.data.find(
+    (member) => member.user.id === user?.id,
+  );
+  const canAssignTasks =
+    membership?.role === "OWNER" || membership?.role === "ADMIN";
 
   return (
     <div>
@@ -250,13 +257,7 @@ export default function ProjectBoardPage() {
                       {task.assignees.length ? (
                         <span className="flex -space-x-2">
                           {task.assignees.map((assignee) => (
-                            <UserAvatar
-                              key={assignee.id}
-                              className="size-7 border-2 border-surface text-[9px]"
-                              title={assignee.name}
-                              name={assignee.name}
-                              avatar={assignee.avatar}
-                            />
+                            <AssigneeAvatar key={assignee.id} user={assignee} />
                           ))}
                         </span>
                       ) : (
@@ -350,6 +351,7 @@ export default function ProjectBoardPage() {
               <AssigneePicker
                 members={membersQuery.data}
                 selectedIds={selectedAssigneeIds}
+                disabled={!canAssignTasks}
                 onChange={(assigneeIds) =>
                   setValue("assigneeIds", assigneeIds, {
                     shouldDirty: true,
