@@ -46,6 +46,10 @@
   --glass-edge: rgb(255 255 255 / 20%);
 }
 
+:root[data-theme="dark"] svg {
+  color: #ffffff;
+}
+
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
