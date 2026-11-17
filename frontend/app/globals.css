@@ -50,6 +50,15 @@
   color: #ffffff;
 }
 
+.brand-mark {
+  background: var(--surface-secondary);
+  color: #000000;
+}
+
+:root[data-theme="dark"] .brand-mark {
+  color: #ffffff;
+}
+
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);

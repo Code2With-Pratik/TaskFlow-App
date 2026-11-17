@@ -104,7 +104,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <div className="absolute -right-16 -top-12 size-[340px] rounded-full border border-white/[0.08]" />
         <IconHover>
           <Link href="/" className="relative z-10 flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-white text-black">
+            <span className="brand-mark grid size-10 place-items-center rounded-xl">
               <Workflow size={21} />
             </span>
             <span className="text-lg font-semibold">TaskFlow</span>
@@ -167,7 +167,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               href="/"
               className="mb-12 inline-flex items-center gap-2.5 lg:hidden"
             >
-              <span className="grid size-9 place-items-center rounded-xl bg-black text-white">
+              <span className="brand-mark grid size-9 place-items-center rounded-xl">
                 <Workflow size={19} />
               </span>
               <span className="text-base font-semibold">TaskFlow</span>
