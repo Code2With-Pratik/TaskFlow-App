@@ -127,7 +127,9 @@ Add these secrets to the Render API service (never to Vercel or source control):
 
 Set all four variables together and redeploy. Until configured, GitHub controls
 remain disabled. Project owners/admins can install the App for a project,
-select repositories, and link issues or pull requests to tasks. Pull-request
+select repositories, and link issues or pull requests to tasks. Owners/admins
+can also disconnect GitHub from a project; this pauses syncing but keeps
+existing task links visible and does not uninstall the GitHub App. Pull-request
 state and review summaries update through verified GitHub webhooks. Projects
 may opt into moving linked tasks to Done when a PR is merged.
 

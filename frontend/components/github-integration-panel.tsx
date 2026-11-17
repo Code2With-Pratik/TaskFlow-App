@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { apiFetch, getErrorMessage } from "@/lib/api";
 import type {
   GitHubAvailableRepository,
@@ -20,6 +21,7 @@ export function GitHubIntegrationPanel({
 }) {
   const queryClient = useQueryClient();
   const [selectedRepository, setSelectedRepository] = useState("");
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const settingsQuery = useQuery({
     queryKey: ["github-project", projectId],
     queryFn: () =>
@@ -40,6 +42,20 @@ export function GitHubIntegrationPanel({
         method: "POST",
       }),
     onSuccess: ({ url }) => window.location.assign(url),
+  });
+  const disconnect = useMutation({
+    mutationFn: () =>
+      apiFetch<void>(`/projects/${projectId}/github`, { method: "DELETE" }),
+    onSuccess: async () => {
+      setConfirmDisconnect(false);
+      setSelectedRepository("");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["github-project", projectId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["github-available-repositories", projectId],
+        }),
+      ]);
+    },
   });
   const addRepository = useMutation({
     mutationFn: (fullName: string) =>
@@ -114,9 +130,20 @@ export function GitHubIntegrationPanel({
           </div>
         ) : (
           <>
-            <p className="text-xs text-muted">
-              Installed for <span className="font-medium text-foreground">@{integration.installation.accountLogin}</span>
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted">
+                Installed for <span className="font-medium text-foreground">@{integration.installation.accountLogin}</span>
+              </p>
+              {canManage ? (
+                <Button
+                  onClick={() => setConfirmDisconnect(true)}
+                  size="sm"
+                  variant="ghost"
+                >
+                  Disconnect
+                </Button>
+              ) : null}
+            </div>
             {integration.installation.repositories.length ? (
               <ul className="space-y-1">
                 {integration.installation.repositories.map((repository) => (
@@ -192,6 +219,17 @@ export function GitHubIntegrationPanel({
             ) : null}
           </>
         )}
+        <ConfirmDialog
+          confirmLabel="Disconnect"
+          description="GitHub syncing will stop for this project. Previously linked issues and pull requests will remain visible. The TaskFlow GitHub App will remain installed on GitHub and can still be used by other projects."
+          error={disconnect.error ? getErrorMessage(disconnect.error) : null}
+          onCancel={() => setConfirmDisconnect(false)}
+          onConfirm={() => disconnect.mutate()}
+          open={confirmDisconnect}
+          pending={disconnect.isPending}
+          pendingLabel="Disconnecting…"
+          title="Disconnect GitHub from this project?"
+        />
       </CardContent>
     </Card>
   );

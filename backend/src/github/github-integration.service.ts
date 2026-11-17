@@ -127,6 +127,17 @@ export class GitHubIntegrationService {
     };
   }
 
+  async disconnect(projectId: string, userId: string): Promise<void> {
+    await this.projectAccess.requireRoles(projectId, userId, [
+      ProjectRole.OWNER,
+      ProjectRole.ADMIN,
+    ]);
+    await this.prisma.gitHubInstallation.updateMany({
+      where: { projectId, isActive: true },
+      data: { isActive: false },
+    });
+  }
+
   async completeInstallation(
     state: string,
     installationIdValue: string | undefined,

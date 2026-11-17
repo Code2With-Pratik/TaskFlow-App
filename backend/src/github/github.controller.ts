@@ -46,6 +46,15 @@ export class GitHubProjectController {
     return this.github.createInstallUrl(projectId, user.id);
   }
 
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  disconnect(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.github.disconnect(projectId, user.id);
+  }
+
   @Get('repositories/available')
   listAvailableRepositories(
     @Param('projectId') projectId: string,
