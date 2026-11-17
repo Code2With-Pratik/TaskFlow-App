@@ -6,6 +6,8 @@ import { siteUrl } from "../lib/site";
 import { Providers } from "./providers";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],

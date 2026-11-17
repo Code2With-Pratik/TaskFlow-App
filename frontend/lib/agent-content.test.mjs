@@ -13,6 +13,7 @@ import {
   contactContent,
   privacyContent,
 } from "./trust-content.mjs";
+import { createContentSecurityPolicy } from "./security-policy.mjs";
 
 test("accepts explicit Markdown media ranges with a positive quality", () => {
   assert.equal(acceptsMarkdown("text/markdown"), true);
@@ -91,4 +92,26 @@ test("About, Contact, and Privacy pages each provide a substantive trust anchor"
     assert.ok(text.length >= 500, `${page.title} has ${text.length} characters`);
   }
   assert.match(privacyContent.sections.flatMap((section) => section.paragraphs).join(" "), /Vercel Web Analytics and Speed Insights/);
+});
+
+test("CSP uses request nonces, trusted types, and only the configured API origins", () => {
+  const policy = createContentSecurityPolicy(
+    "test-nonce",
+    "https://api.taskflow.example",
+  );
+  const scriptPolicy = policy
+    .split(";")
+    .find((directive) => directive.trim().startsWith("script-src"));
+
+  assert.match(scriptPolicy ?? "", /'nonce-test-nonce'/);
+  assert.match(scriptPolicy ?? "", /'strict-dynamic'/);
+  assert.doesNotMatch(scriptPolicy ?? "", /unsafe-inline/);
+  assert.match(policy, /require-trusted-types-for 'script'/);
+  assert.match(policy, /trusted-types nextjs nextjs#bundler/);
+  assert.match(policy, /https:\/\/api\.taskflow\.example/);
+  assert.match(policy, /wss:\/\/api\.taskflow\.example/);
+  assert.match(
+    createContentSecurityPolicy("dev-nonce", "http://localhost:3000", true),
+    /ws:\/\/localhost:3000/,
+  );
 });
