@@ -24,7 +24,7 @@ export class CommentsService {
         id: true,
         projectId: true,
         title: true,
-        assigneeId: true,
+        assignees: { select: { userId: true } },
         createdById: true,
       },
     });
@@ -56,10 +56,10 @@ export class CommentsService {
       });
 
       const recipients = new Set(
-        [task.assigneeId, task.createdById].filter(
-          (recipientId): recipientId is string =>
-            recipientId !== null && recipientId !== userId,
-        ),
+        [
+          ...task.assignees.map(({ userId: assigneeId }) => assigneeId),
+          task.createdById,
+        ].filter((recipientId) => recipientId !== userId),
       );
       if (recipients.size > 0) {
         await transaction.notification.createMany({

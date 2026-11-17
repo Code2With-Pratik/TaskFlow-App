@@ -45,13 +45,13 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   projectId: string;
-  assigneeId: string | null;
+  assigneeIds: string[];
   createdById: string;
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
   project: Pick<Project, "id" | "name">;
-  assignee: Pick<User, "id" | "name" | "email" | "avatar"> | null;
+  assignees: Array<Pick<User, "id" | "name" | "email" | "avatar">>;
   createdBy: Pick<User, "id" | "name" | "email" | "avatar">;
   _count?: { comments: number };
 }

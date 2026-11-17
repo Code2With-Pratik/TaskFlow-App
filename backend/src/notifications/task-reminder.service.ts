@@ -22,13 +22,13 @@ export class TaskReminderService {
     const tasks = await this.prisma.task.findMany({
       where: {
         status: { not: 'DONE' },
-        assigneeId: { not: null },
+        assignees: { some: {} },
         dueDate: { lte: reminderWindow },
       },
       select: {
         id: true,
         title: true,
-        assigneeId: true,
+        assignees: { select: { userId: true } },
         dueDate: true,
         project: { select: { name: true } },
       },
@@ -36,7 +36,7 @@ export class TaskReminderService {
     });
 
     for (const task of tasks) {
-      if (!task.assigneeId || !task.dueDate) continue;
+      if (!task.dueDate) continue;
 
       const overdue = task.dueDate < now;
       const type = overdue ? 'TASK_OVERDUE' : 'TASK_DUE_SOON';
@@ -44,26 +44,23 @@ export class TaskReminderService {
       const message = overdue
         ? `"${task.title}" in ${task.project.name} is overdue.`
         : `"${task.title}" in ${task.project.name} is due ${task.dueDate.toISOString().slice(0, 10)}.`;
-      const existing = await this.prisma.notification.findFirst({
-        where: {
-          userId: task.assigneeId,
-          type,
-          message,
-          createdAt: { gte: startOfDay },
-        },
-        select: { id: true },
-      });
-      if (existing) continue;
+      for (const { userId } of task.assignees) {
+        const existing = await this.prisma.notification.findFirst({
+          where: {
+            userId,
+            type,
+            message,
+            createdAt: { gte: startOfDay },
+          },
+          select: { id: true },
+        });
+        if (existing) continue;
 
-      await this.prisma.notification.create({
-        data: {
-          title,
-          message,
-          type,
-          userId: task.assigneeId,
-        },
-      });
-      this.notificationsGateway.emitNewNotification(task.assigneeId);
+        await this.prisma.notification.create({
+          data: { title, message, type, userId },
+        });
+        this.notificationsGateway.emitNewNotification(userId);
+      }
     }
 
     this.logger.log(`Processed reminders for ${tasks.length} assigned tasks.`);

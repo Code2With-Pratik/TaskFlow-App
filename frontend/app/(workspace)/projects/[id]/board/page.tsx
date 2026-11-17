@@ -5,10 +5,11 @@ import { ArrowLeft, CalendarDays, CirclePlus, ExternalLink, Plus } from "@/compo
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { AssigneePicker } from "@/components/assignee-picker";
 import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ const taskSchema = z.object({
   title: z.string().trim().min(1, "Enter a task title").max(200),
   description: z.string().max(5000, "Description is too long"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-  assigneeId: z.string(),
+  assigneeIds: z.array(z.string()),
   dueDate: z.string(),
 });
 type TaskValues = z.infer<typeof taskSchema>;
@@ -61,7 +62,7 @@ export default function ProjectBoardPage() {
           projectId: id,
           title: values.title,
           description: values.description.trim() || undefined,
-          assigneeId: values.assigneeId || null,
+          assigneeIds: values.assigneeIds,
           dueDate: values.dueDate
             ? new Date(`${values.dueDate}T23:59:59.999`).toISOString()
             : null,
@@ -92,6 +93,8 @@ export default function ProjectBoardPage() {
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<TaskValues>({
     resolver: zodResolver(taskSchema),
@@ -99,9 +102,13 @@ export default function ProjectBoardPage() {
       title: "",
       description: "",
       priority: "MEDIUM",
-      assigneeId: "",
+      assigneeIds: [],
       dueDate: "",
     },
+  });
+  const selectedAssigneeIds = useWatch({
+    control,
+    name: "assigneeIds",
   });
 
   async function invalidateBoard() {
@@ -240,13 +247,18 @@ export default function ProjectBoardPage() {
                       ) : null}
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                      {task.assignee ? (
-                        <UserAvatar
-                          className="size-7 text-[9px]"
-                          title={task.assignee.name}
-                          name={task.assignee.name}
-                          avatar={task.assignee.avatar}
-                        />
+                      {task.assignees.length ? (
+                        <span className="flex -space-x-2">
+                          {task.assignees.map((assignee) => (
+                            <UserAvatar
+                              key={assignee.id}
+                              className="size-7 border-2 border-surface text-[9px]"
+                              title={assignee.name}
+                              name={assignee.name}
+                              avatar={assignee.avatar}
+                            />
+                          ))}
+                        </span>
                       ) : (
                         <span className="text-[10px] text-muted">Unassigned</span>
                       )}
@@ -335,20 +347,16 @@ export default function ProjectBoardPage() {
                   ))}
                 </select>
               </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-foreground">Assignee</span>
-                <select
-                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
-                  {...register("assigneeId")}
-                >
-                  <option value="">Unassigned</option>
-                  {membersQuery.data.map((member) => (
-                    <option key={member.user.id} value={member.user.id}>
-                      {member.user.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <AssigneePicker
+                members={membersQuery.data}
+                selectedIds={selectedAssigneeIds}
+                onChange={(assigneeIds) =>
+                  setValue("assigneeIds", assigneeIds, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              />
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="task-due-date">
                   Due date <span className="font-normal text-muted">· optional</span>

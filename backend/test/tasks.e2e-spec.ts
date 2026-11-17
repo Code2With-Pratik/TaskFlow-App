@@ -97,7 +97,7 @@ describe('Tasks, comments, and activity (e2e)', () => {
         title: 'Prepare launch checklist',
         description: 'Coordinate the first release',
         priority: 'HIGH',
-        assigneeId: member.id,
+        assigneeIds: [member.id],
         dueDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       })
       .expect(201);
@@ -105,7 +105,23 @@ describe('Tasks, comments, and activity (e2e)', () => {
     taskId = created.body.id;
     expect(created.body.status).toBe('TODO');
     expect(created.body.priority).toBe('HIGH');
-    expect(created.body.assignee.email).toBe(accounts.member.email);
+    expect(created.body.assignees.map((assignee: { email: string }) => assignee.email))
+      .toContain(accounts.member.email);
+    expect(created.body.assigneeIds).toContain(member.id);
+
+    const owner = await prisma.user.findUniqueOrThrow({
+      where: { email: accounts.owner.email },
+      select: { id: true },
+    });
+    const assignedToMultiple = await request(app.getHttpServer())
+      .patch(`/tasks/${taskId}`)
+      .set('Authorization', authorization('owner'))
+      .send({ assigneeIds: [member.id, owner.id] })
+      .expect(200);
+    expect(assignedToMultiple.body.assigneeIds).toEqual(
+      expect.arrayContaining([member.id, owner.id]),
+    );
+    expect(assignedToMultiple.body.assignees).toHaveLength(2);
 
     const listed = await request(app.getHttpServer())
       .get('/tasks')
@@ -126,12 +142,12 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .send({
         projectId,
         title: 'Invalid assignee',
-        assigneeId: (
+        assigneeIds: [(
           await prisma.user.findUniqueOrThrow({
             where: { email: accounts.outsider.email },
             select: { id: true },
           })
-        ).id,
+        ).id],
       })
       .expect(400);
 

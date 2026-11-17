@@ -15,10 +15,28 @@ import type { UpdateTaskDto } from './dto/update-task.dto.js';
 
 const taskRelations = {
   project: { select: { id: true, name: true } },
-  assignee: { select: { id: true, name: true, email: true, avatar: true } },
+  assignees: {
+    select: {
+      userId: true,
+      user: { select: { id: true, name: true, email: true, avatar: true } },
+    },
+  },
   createdBy: { select: { id: true, name: true, email: true, avatar: true } },
   _count: { select: { comments: true } },
 } satisfies Prisma.TaskInclude;
+
+type TaskWithRelations = Prisma.TaskGetPayload<{
+  include: typeof taskRelations;
+}>;
+
+function serializeTask(task: TaskWithRelations) {
+  const { assignees, ...taskData } = task;
+  return {
+    ...taskData,
+    assignees: assignees.map(({ user }) => user),
+    assigneeIds: assignees.map(({ userId }) => userId),
+  };
+}
 
 @Injectable()
 export class TasksService {
@@ -30,7 +48,7 @@ export class TasksService {
 
   async create(userId: string, dto: CreateTaskDto) {
     await this.projectAccess.requireMembership(dto.projectId, userId);
-    await this.assertAssigneeIsMember(dto.projectId, dto.assigneeId);
+    await this.assertAssigneesAreMembers(dto.projectId, dto.assigneeIds);
 
     const task = await this.prisma.$transaction(async (transaction) => {
       const task = await transaction.task.create({
@@ -41,7 +59,11 @@ export class TasksService {
           description: dto.description?.trim(),
           status: dto.status,
           priority: dto.priority,
-          assigneeId: dto.assigneeId,
+          assignees: {
+            create: (dto.assigneeIds ?? []).map((assigneeId) => ({
+              userId: assigneeId,
+            })),
+          },
           dueDate: dto.dueDate,
         },
         include: taskRelations,
@@ -56,23 +78,26 @@ export class TasksService {
         },
       });
 
-      if (task.assigneeId && task.assigneeId !== userId) {
-        await transaction.notification.create({
-          data: {
+      const notifiedUserIds = (dto.assigneeIds ?? []).filter(
+        (assigneeId) => assigneeId !== userId,
+      );
+      if (notifiedUserIds.length > 0) {
+        await transaction.notification.createMany({
+          data: notifiedUserIds.map((recipientId) => ({
             title: 'You were assigned a task',
             message: `You were assigned "${task.title}" in ${task.project.name}.`,
-            type: 'TASK_ASSIGNED',
-            userId: task.assigneeId,
-          },
+            type: 'TASK_ASSIGNED' as const,
+            userId: recipientId,
+          })),
         });
       }
 
-      return task;
+      return { task, notifiedUserIds };
     });
-    if (task.assigneeId && task.assigneeId !== userId) {
-      this.notificationsGateway.emitNewNotification(task.assigneeId);
+    for (const recipientId of task.notifiedUserIds) {
+      this.notificationsGateway.emitNewNotification(recipientId);
     }
-    return task;
+    return serializeTask(task.task);
   }
 
   async findAll(userId: string, filters: FindTasksDto) {
@@ -92,7 +117,9 @@ export class TasksService {
             ],
           }
         : {}),
-      ...(filters.assigneeId ? { assigneeId: filters.assigneeId } : {}),
+      ...(filters.assigneeId
+        ? { assignees: { some: { userId: filters.assigneeId } } }
+        : {}),
       ...(filters.search
         ? {
             OR: [
@@ -108,7 +135,7 @@ export class TasksService {
         : {}),
     };
 
-    const data = await this.prisma.task.findMany({
+    const tasks = await this.prisma.task.findMany({
       where,
       include: taskRelations,
       orderBy: [{ dueDate: 'asc' }, { updatedAt: 'desc' }],
@@ -117,7 +144,12 @@ export class TasksService {
     });
     const total = await this.prisma.task.count({ where });
 
-    return { data, total, page: filters.page, limit: filters.limit };
+    return {
+      data: tasks.map(serializeTask),
+      total,
+      page: filters.page,
+      limit: filters.limit,
+    };
   }
 
   async findOne(id: string, userId: string) {
@@ -131,7 +163,7 @@ export class TasksService {
     }
 
     await this.projectAccess.requireMembership(task.projectId, userId);
-    return task;
+    return serializeTask(task);
   }
 
   async update(id: string, userId: string, dto: UpdateTaskDto) {
@@ -142,7 +174,7 @@ export class TasksService {
         projectId: true,
         status: true,
         title: true,
-        assigneeId: true,
+        assignees: { select: { userId: true } },
         createdById: true,
       },
     });
@@ -151,18 +183,27 @@ export class TasksService {
     }
 
     await this.projectAccess.requireMembership(existing.projectId, userId);
-    if (dto.assigneeId !== undefined) {
-      await this.assertAssigneeIsMember(existing.projectId, dto.assigneeId);
+    if (dto.assigneeIds !== undefined) {
+      await this.assertAssigneesAreMembers(existing.projectId, dto.assigneeIds);
     }
 
-    const data: Prisma.TaskUncheckedUpdateInput = {
+    const data: Prisma.TaskUpdateInput = {
       ...(dto.title === undefined ? {} : { title: dto.title.trim() }),
       ...(dto.description === undefined
         ? {}
         : { description: dto.description?.trim() ?? null }),
       ...(dto.status === undefined ? {} : { status: dto.status }),
       ...(dto.priority === undefined ? {} : { priority: dto.priority }),
-      ...(dto.assigneeId === undefined ? {} : { assigneeId: dto.assigneeId }),
+      ...(dto.assigneeIds === undefined
+        ? {}
+        : {
+            assignees: {
+              deleteMany: {},
+              create: dto.assigneeIds.map((assigneeId) => ({
+                user: { connect: { id: assigneeId } },
+              })),
+            },
+          }),
       ...(dto.dueDate === undefined ? {} : { dueDate: dto.dueDate }),
     };
 
@@ -197,27 +238,28 @@ export class TasksService {
         type: 'TASK_ASSIGNED' | 'TASK_STATUS_UPDATED';
         userId: string;
       }> = [];
-      if (
-        dto.assigneeId &&
-        dto.assigneeId !== existing.assigneeId &&
-        dto.assigneeId !== userId
-      ) {
-        notifications.push({
-          title: 'You were assigned a task',
-          message: `You were assigned "${task.title}" in ${task.project.name}.`,
-          type: 'TASK_ASSIGNED',
-          userId: dto.assigneeId,
-        });
+      const existingAssigneeIds = new Set(
+        existing.assignees.map(({ userId: assigneeId }) => assigneeId),
+      );
+      if (dto.assigneeIds !== undefined) {
+        for (const assigneeId of dto.assigneeIds) {
+          if (assigneeId !== userId && !existingAssigneeIds.has(assigneeId)) {
+            notifications.push({
+              title: 'You were assigned a task',
+              message: `You were assigned "${task.title}" in ${task.project.name}.`,
+              type: 'TASK_ASSIGNED',
+              userId: assigneeId,
+            });
+          }
+        }
       }
       if (
         dto.status !== undefined &&
         dto.status !== existing.status
       ) {
         const recipients = new Set(
-          [task.assigneeId, existing.createdById].filter(
-            (recipientId): recipientId is string =>
-              recipientId !== null && recipientId !== userId,
-          ),
+          [...task.assignees.map(({ userId: assigneeId }) => assigneeId), existing.createdById]
+            .filter((recipientId) => recipientId !== userId),
         );
         for (const recipientId of recipients) {
           notifications.push({
@@ -242,7 +284,7 @@ export class TasksService {
     for (const recipientId of result.notifiedUserIds) {
       this.notificationsGateway.emitNewNotification(recipientId);
     }
-    return result.task;
+    return serializeTask(result.task);
   }
 
   async remove(id: string, userId: string): Promise<void> {
@@ -284,20 +326,18 @@ export class TasksService {
     });
   }
 
-  private async assertAssigneeIsMember(
+  private async assertAssigneesAreMembers(
     projectId: string,
-    assigneeId: string | null | undefined,
+    assigneeIds: string[] | undefined,
   ): Promise<void> {
-    if (!assigneeId) {
-      return;
-    }
+    if (!assigneeIds?.length) return;
 
-    const membership = await this.prisma.projectMember.findUnique({
-      where: { projectId_userId: { projectId, userId: assigneeId } },
-      select: { id: true },
+    const memberships = await this.prisma.projectMember.findMany({
+      where: { projectId, userId: { in: assigneeIds } },
+      select: { userId: true },
     });
-    if (!membership) {
-      throw new BadRequestException('The assignee must be a project member');
+    if (memberships.length !== assigneeIds.length) {
+      throw new BadRequestException('All assignees must be project members');
     }
   }
 }

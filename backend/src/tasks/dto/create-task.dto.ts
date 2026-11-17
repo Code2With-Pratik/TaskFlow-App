@@ -3,9 +3,11 @@ import { Type } from 'class-transformer';
 import {
   IsDate,
   IsEnum,
+  IsArray,
   IsOptional,
   IsString,
   IsUUID,
+  ArrayUnique,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -38,10 +40,12 @@ export class CreateTaskDto {
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
 
-  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @ApiPropertyOptional({ type: [String], format: 'uuid' })
   @IsOptional()
-  @IsUUID()
-  assigneeId?: string | null;
+  @IsArray()
+  @ArrayUnique()
+  @IsUUID('4', { each: true })
+  assigneeIds?: string[];
 
   @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
   @IsOptional()

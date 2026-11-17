@@ -47,13 +47,18 @@ export function TaskRow({ task }: { task: Task }) {
           ) : null}
           <Badge className="px-2 text-[10px] sm:text-[11px]">{task.status}</Badge>
           <Badge className="px-2 text-[10px] sm:text-[11px]">{task.priority}</Badge>
-          {task.assignee ? (
-            <UserAvatar
-              className="size-7"
-              title={task.assignee.name}
-              name={task.assignee.name}
-              avatar={task.assignee.avatar}
-            />
+          {task.assignees.length ? (
+            <span className="flex -space-x-2">
+              {task.assignees.map((assignee) => (
+                <UserAvatar
+                  key={assignee.id}
+                  className="size-7 border-2 border-surface"
+                  title={assignee.name}
+                  name={assignee.name}
+                  avatar={assignee.avatar}
+                />
+              ))}
+            </span>
           ) : null}
         </span>
       </Link>

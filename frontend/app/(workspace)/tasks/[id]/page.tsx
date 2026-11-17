@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
+import { AssigneePicker } from "@/components/assignee-picker";
 import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -163,7 +164,7 @@ export default function TaskDetailsPage() {
   const updateTask = useMutation({
     mutationFn: (
       updates: Partial<
-        Pick<Task, "status" | "priority" | "assigneeId" | "dueDate">
+        Pick<Task, "status" | "priority" | "assigneeIds" | "dueDate">
       >,
     ) =>
       apiFetch<Task>(`/tasks/${id}`, {
@@ -505,25 +506,14 @@ export default function TaskDetailsPage() {
                   {priorities.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
                 </select>
               </label>
-              <div>
-                <span className="mb-2 block text-xs font-medium text-muted">Assignee</span>
-                <select
-                  className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
-                  aria-label="Task assignee"
-                  value={task.assigneeId ?? ""}
-                  disabled={updateTask.isPending}
-                  onChange={(event) =>
-                    updateTask.mutate({ assigneeId: event.target.value || null })
-                  }
-                >
-                  <option value="">Unassigned</option>
-                  {membersQuery.data.map((member) => (
-                    <option key={member.user.id} value={member.user.id}>
-                      {member.user.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AssigneePicker
+                members={membersQuery.data}
+                selectedIds={task.assigneeIds}
+                disabled={updateTask.isPending}
+                onChange={(assigneeIds) =>
+                  updateTask.mutate({ assigneeIds })
+                }
+              />
               <div className="block">
                 <label className="mb-2 block text-xs font-medium text-muted" htmlFor="task-due-date">
                   Due date
