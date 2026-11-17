@@ -139,30 +139,32 @@ export default function ProfilePage() {
               updateProfile.mutate(values);
             })}
           >
-            <div>
-              <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-name">
-                Full name
-              </label>
-              <Input
-                id="profile-name"
-                autoComplete="name"
-                aria-invalid={Boolean(errors.name)}
-                {...register("name")}
-              />
-              {errors.name ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.name.message}</p> : null}
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-designation">
-                Designation
-              </label>
-              <Input
-                id="profile-designation"
-                autoComplete="organization-title"
-                placeholder="e.g. Product Designer"
-                aria-invalid={Boolean(errors.designation)}
-                {...register("designation")}
-              />
-              {errors.designation ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.designation.message}</p> : null}
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-name">
+                  Full name
+                </label>
+                <Input
+                  id="profile-name"
+                  autoComplete="name"
+                  aria-invalid={Boolean(errors.name)}
+                  {...register("name")}
+                />
+                {errors.name ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.name.message}</p> : null}
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-designation">
+                  Designation
+                </label>
+                <Input
+                  id="profile-designation"
+                  autoComplete="organization-title"
+                  placeholder="e.g. Product Designer"
+                  aria-invalid={Boolean(errors.designation)}
+                  {...register("designation")}
+                />
+                {errors.designation ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.designation.message}</p> : null}
+              </div>
             </div>
             <div>
               <span className="mb-2 block text-sm font-medium text-foreground">Profile photo</span>

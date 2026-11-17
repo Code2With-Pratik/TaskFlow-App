@@ -378,7 +378,10 @@ export default function ProjectDetailsPage() {
                       avatar={member.user.avatar}
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-medium text-foreground">{member.user.name}</span>
+                      <span className="block truncate text-xs font-medium text-foreground">
+                        {member.user.name}
+                        {member.user.designation ? ` (${member.user.designation})` : ""}
+                      </span>
                       <span className="block truncate text-[10px] text-muted">{member.user.email}</span>
                     </span>
                     <Badge>{member.role}</Badge>

@@ -501,9 +501,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       {user.designation}
                     </span>
                   ) : null}
-                  <span className="block truncate text-[10px] text-muted">
-                    {user?.email}
-                  </span>
                 </span>
               </button>
               {profileOpen ? (

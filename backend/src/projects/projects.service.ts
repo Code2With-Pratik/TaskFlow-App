@@ -101,7 +101,15 @@ export class ProjectsService {
         id: true,
         role: true,
         joinedAt: true,
-        user: { select: { id: true, name: true, email: true, avatar: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            designation: true,
+          },
+        },
       },
       orderBy: { joinedAt: 'asc' },
     });

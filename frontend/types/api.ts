@@ -23,7 +23,7 @@ export interface ProjectMember {
   id: string;
   role: ProjectRole;
   joinedAt: string;
-  user: Pick<User, "id" | "name" | "email" | "avatar">;
+  user: Pick<User, "id" | "name" | "email" | "avatar" | "designation">;
 }
 
 export interface Project {
