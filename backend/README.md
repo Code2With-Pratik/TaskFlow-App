@@ -107,12 +107,14 @@ GitHub App support is optional. Configure `GITHUB_APP_ID`, `GITHUB_APP_SLUG`,
 `GITHUB_APP_WEBHOOK_SECRET` together to enable
 project installation, repository selection, issue/pull-request linking, review
 state visibility, and verified pull-request webhooks. Set the GitHub App Setup
-URL to `/integrations/github/callback`, its webhook URL to
-`/integrations/github/webhook`, and subscribe to `installation`,
-`pull_request`, and `pull_request_review`. Repository metadata, issues, and
-pull requests require read-only permissions. Project owners/admins connect an
-installation and select repositories; project members can link work to tasks.
-Automatic task completion on PR merge is opt-in per project.
+URL to `https://<your-api-service>/integrations/github/callback` and enable
+**Redirect on update** so GitHub returns to TaskFlow after repository access is
+saved for an existing installation. Set its webhook URL to
+`https://<your-api-service>/integrations/github/webhook`, and subscribe to
+`installation`, `pull_request`, and `pull_request_review`. Repository metadata,
+issues, and pull requests require read-only permissions. Project owners/admins
+connect an installation and select repositories; project members can link work
+to tasks. Automatic task completion on PR merge is opt-in per project.
 
 ## NestJS concepts in this backend
 

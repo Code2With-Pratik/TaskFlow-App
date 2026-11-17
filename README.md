@@ -111,8 +111,10 @@ the same site are the most reliable long-term setup.
 
 GitHub issue and pull-request linking uses a GitHub App. Create an App and set
 its Setup URL to
-`https://<your-api-service>.onrender.com/integrations/github/callback` and its
-webhook URL to `https://<your-api-service>.onrender.com/integrations/github/webhook`.
+`https://<your-api-service>.onrender.com/integrations/github/callback`. Enable
+**Redirect on update** so GitHub returns to TaskFlow after repository access is
+saved for an existing installation. Set its webhook URL to
+`https://<your-api-service>.onrender.com/integrations/github/webhook`.
 Subscribe to `installation`, `pull_request`, and `pull_request_review` events.
 Grant read-only repository metadata, issues, and pull requests permissions.
 
