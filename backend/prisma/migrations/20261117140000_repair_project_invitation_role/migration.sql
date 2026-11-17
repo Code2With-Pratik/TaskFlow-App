@@ -1,0 +1,2 @@
+ALTER TABLE "ProjectInvitation"
+ADD COLUMN IF NOT EXISTS "role" "ProjectRole" NOT NULL DEFAULT 'MEMBER';
