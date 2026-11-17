@@ -7,7 +7,12 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAuth } from "@/app/auth-provider";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { AssigneeAvatar } from "@/components/assignee-avatar";
@@ -28,6 +33,28 @@ const columns: Array<{ status: TaskStatus; label: string; tone: string }> = [
   { status: "IN_PROGRESS", label: "In progress", tone: "bg-warning" },
   { status: "DONE", label: "Done", tone: "bg-success" },
 ];
+const taskPageSize = 50;
+
+function useColumnTasks(projectId: string, status: TaskStatus) {
+  return useInfiniteQuery({
+    queryKey: ["project-tasks", projectId, status],
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({
+        projectId,
+        status,
+        limit: String(taskPageSize),
+        page: String(pageParam),
+      });
+      return apiFetch<PaginatedTasks>(`/tasks?${params.toString()}`);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page * lastPage.limit < lastPage.total
+        ? lastPage.page + 1
+        : undefined,
+  });
+}
+
 const taskSchema = z.object({
   title: z.string().trim().min(1, "Enter a task title").max(200),
   description: z.string().max(5000, "Description is too long"),
@@ -47,11 +74,14 @@ export default function ProjectBoardPage() {
     queryKey: ["project", id],
     queryFn: () => apiFetch<Project>(`/projects/${id}`),
   });
-  const tasksQuery = useQuery({
-    queryKey: ["project-tasks", id],
-    queryFn: () =>
-      apiFetch<PaginatedTasks>(`/tasks?projectId=${encodeURIComponent(id)}&limit=100`),
-  });
+  const todoTasksQuery = useColumnTasks(id, "TODO");
+  const inProgressTasksQuery = useColumnTasks(id, "IN_PROGRESS");
+  const doneTasksQuery = useColumnTasks(id, "DONE");
+  const taskQueries = [
+    todoTasksQuery,
+    inProgressTasksQuery,
+    doneTasksQuery,
+  ];
   const membersQuery = useQuery({
     queryKey: ["project-members", id],
     queryFn: () => apiFetch<ProjectMember[]>(`/projects/${id}/members`),
@@ -122,27 +152,36 @@ export default function ProjectBoardPage() {
     ]);
   }
 
-  if (projectQuery.isLoading || tasksQuery.isLoading || membersQuery.isLoading) {
+  if (
+    projectQuery.isLoading ||
+    taskQueries.some((query) => query.isLoading) ||
+    membersQuery.isLoading
+  ) {
     return <LoadingState label="Loading project board…" />;
   }
-  const pageError = projectQuery.error ?? tasksQuery.error ?? membersQuery.error;
+  const pageError =
+    projectQuery.error ??
+    taskQueries.find((query) => query.error)?.error ??
+    membersQuery.error;
   if (pageError) {
     return (
       <ErrorState
         error={pageError}
         onRetry={() => {
           void projectQuery.refetch();
-          void tasksQuery.refetch();
+          void Promise.all(taskQueries.map((query) => query.refetch()));
           void membersQuery.refetch();
         }}
       />
     );
   }
-  if (!projectQuery.data || !tasksQuery.data || !membersQuery.data) {
-    return <ErrorState error={new Error("Board data is missing.")} onRetry={() => void tasksQuery.refetch()} />;
+  if (!projectQuery.data || !membersQuery.data || taskQueries.some((query) => !query.data)) {
+    return <ErrorState error={new Error("Board data is missing.")} onRetry={() => void Promise.all(taskQueries.map((query) => query.refetch()))} />;
   }
 
-  const tasks = tasksQuery.data.data;
+  const tasks = taskQueries.flatMap((query) =>
+    query.data?.pages.flatMap((page) => page.data) ?? [],
+  );
   const membership = membersQuery.data.find(
     (member) => member.user.id === user?.id,
   );
@@ -185,7 +224,8 @@ export default function ProjectBoardPage() {
         role="region"
         tabIndex={0}
       >
-        {columns.map((column) => {
+        {columns.map((column, columnIndex) => {
+          const taskQuery = taskQueries[columnIndex];
           const columnTasks = tasks.filter((task) => task.status === column.status);
           return (
             <section
@@ -208,7 +248,7 @@ export default function ProjectBoardPage() {
                   {column.label}
                 </h2>
                 <span className="grid min-w-6 place-items-center rounded-lg bg-surface px-2 py-1 text-[10px] font-medium text-muted">
-                  {columnTasks.length}
+                  {taskQuery.data?.pages[0]?.total ?? 0}
                 </span>
               </div>
               <div className="min-h-36 space-y-3">
@@ -295,6 +335,17 @@ export default function ProjectBoardPage() {
                       Drop a task here or add one
                     </button>
                   </IconHover>
+                ) : null}
+                {taskQuery.hasNextPage ? (
+                  <Button
+                    className="w-full"
+                    disabled={taskQuery.isFetchingNextPage}
+                    onClick={() => void taskQuery.fetchNextPage()}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    {taskQuery.isFetchingNextPage ? "Loading…" : "Load more"}
+                  </Button>
                 ) : null}
               </div>
             </section>

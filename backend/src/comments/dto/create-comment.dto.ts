@@ -1,9 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
+  IsUUID,
   Validate,
   ValidatorConstraint,
   type ValidatorConstraintInterface,
@@ -67,4 +71,17 @@ export class CreateCommentDto {
   @MaxLength(MAX_IMAGE_DATA_LENGTH)
   @Validate(IsSafeImageDataUrl)
   imageData?: string | null;
+
+  @ApiPropertyOptional({ type: [String], maxItems: 25 })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(25)
+  @ArrayUnique()
+  @IsUUID('4', { each: true })
+  mentionedUserIds?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID('4')
+  parentId?: string;
 }

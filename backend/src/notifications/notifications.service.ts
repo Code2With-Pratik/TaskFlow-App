@@ -8,6 +8,16 @@ export class NotificationsService {
   async findAll(userId: string) {
     const data = await this.prisma.notification.findMany({
       where: { userId },
+      include: {
+        projectInvitation: {
+          select: {
+            id: true,
+            status: true,
+            project: { select: { id: true, name: true } },
+            inviter: { select: { name: true } },
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
       take: 100,
     });

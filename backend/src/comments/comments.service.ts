@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -33,6 +34,38 @@ export class CommentsService {
     }
 
     await this.projectAccess.requireMembership(task.projectId, userId);
+    const mentionedUserIds = dto.mentionedUserIds ?? [];
+    const [members, parent] = await Promise.all([
+      mentionedUserIds.length
+        ? this.prisma.projectMember.findMany({
+            where: {
+              projectId: task.projectId,
+              userId: { in: mentionedUserIds },
+            },
+            select: { userId: true },
+          })
+        : Promise.resolve([]),
+      dto.parentId
+        ? this.prisma.comment.findUnique({
+            where: { id: dto.parentId },
+            select: { id: true, taskId: true, parentId: true, userId: true },
+          })
+        : Promise.resolve(null),
+    ]);
+    if (members.length !== mentionedUserIds.length) {
+      throw new BadRequestException(
+        'Mentions must refer to members of this project',
+      );
+    }
+    if (
+      dto.parentId &&
+      (!parent || parent.taskId !== taskId || parent.parentId !== null)
+    ) {
+      throw new BadRequestException(
+        'Replies must reference a top-level comment on this task',
+      );
+    }
+
     const result = await this.prisma.$transaction(async (transaction) => {
       const comment = await transaction.comment.create({
         data: {
@@ -40,39 +73,73 @@ export class CommentsService {
           userId,
           content: dto.content.trim(),
           imageData: dto.imageData ?? null,
+          parentId: dto.parentId ?? null,
+          mentions: {
+            create: mentionedUserIds.map((mentionedUserId) => ({
+              userId: mentionedUserId,
+            })),
+          },
         },
         include: {
           user: { select: { id: true, name: true, email: true, avatar: true } },
+          mentions: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true, designation: true },
+              },
+            },
+          },
         },
       });
 
       await transaction.activity.create({
         data: {
-          action: 'task.comment_added',
-          description: `Commented on task "${task.title}"`,
+          action: dto.parentId ? 'task.comment_replied' : 'task.comment_added',
+          description: dto.parentId
+            ? `Replied to a comment on "${task.title}"`
+            : `Commented on task "${task.title}"`,
           projectId: task.projectId,
           userId,
         },
       });
 
-      const recipients = new Set(
-        [
-          ...task.assignees.map(({ userId: assigneeId }) => assigneeId),
-          task.createdById,
-        ].filter((recipientId) => recipientId !== userId),
-      );
+      const recipients = new Map<string, 'COMMENT_ADDED' | 'COMMENT_MENTIONED'>();
+      const commenters = new Set([
+        ...task.assignees.map(({ userId: assigneeId }) => assigneeId),
+        task.createdById,
+        ...(parent ? [parent.userId] : []),
+      ]);
+      for (const recipientId of commenters) {
+        if (recipientId !== userId) recipients.set(recipientId, 'COMMENT_ADDED');
+      }
+      for (const recipientId of mentionedUserIds) {
+        if (recipientId !== userId) {
+          recipients.set(recipientId, 'COMMENT_MENTIONED');
+        }
+      }
       if (recipients.size > 0) {
         await transaction.notification.createMany({
-          data: Array.from(recipients, (recipientId) => ({
-            title: 'New task comment',
-            message: `${comment.user.name} commented on "${task.title}".`,
-            type: 'COMMENT_ADDED' as const,
+          data: Array.from(recipients, ([recipientId, type]) => ({
+            title:
+              type === 'COMMENT_MENTIONED'
+                ? 'You were mentioned'
+                : dto.parentId
+                  ? 'New task reply'
+                  : 'New task comment',
+            message:
+              type === 'COMMENT_MENTIONED'
+                ? `${comment.user.name} mentioned you on "${task.title}".`
+                : dto.parentId
+                  ? `${comment.user.name} replied to a comment on "${task.title}".`
+                  : `${comment.user.name} commented on "${task.title}".`,
+            type,
             userId: recipientId,
+            href: `/tasks/${taskId}#comment-${comment.id}`,
           })),
         });
       }
 
-      return { comment, notifiedUserIds: Array.from(recipients) };
+      return { comment, notifiedUserIds: Array.from(recipients.keys()) };
     });
     for (const recipientId of result.notifiedUserIds) {
       this.notificationsGateway.emitNewNotification(recipientId);
@@ -94,6 +161,13 @@ export class CommentsService {
       where: { taskId },
       include: {
         user: { select: { id: true, name: true, email: true, avatar: true } },
+        mentions: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, designation: true },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'asc' },
     });

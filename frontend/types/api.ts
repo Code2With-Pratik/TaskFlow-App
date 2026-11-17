@@ -5,9 +5,11 @@ export type NotificationType =
   | "TASK_ASSIGNED"
   | "TASK_STATUS_UPDATED"
   | "COMMENT_ADDED"
+  | "COMMENT_MENTIONED"
   | "PROJECT_INVITATION"
   | "TASK_DUE_SOON"
-  | "TASK_OVERDUE";
+  | "TASK_OVERDUE"
+  | "GITHUB_PULL_REQUEST_MERGED";
 
 export interface User {
   id: string;
@@ -61,7 +63,11 @@ export interface Task {
 export interface Comment {
   id: string;
   content: string;
+  parentId: string | null;
   imageData?: string | null;
+  mentions?: Array<{
+    user: Pick<User, "id" | "name" | "email" | "designation">;
+  }>;
   taskId: string;
   userId: string;
   createdAt: string;
@@ -86,7 +92,54 @@ export interface Notification {
   type: NotificationType;
   userId: string;
   isRead: boolean;
+  href: string | null;
+  projectInvitation: {
+    id: string;
+    status: "PENDING" | "ACCEPTED" | "DECLINED";
+    project: Pick<Project, "id" | "name">;
+    inviter: Pick<User, "name">;
+  } | null;
   createdAt: string;
+}
+
+export interface ProjectInvitation {
+  id: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED";
+}
+
+export interface GitHubRepository {
+  id: string;
+  fullName: string;
+  defaultBranch: string;
+  isPrivate: boolean;
+}
+
+export interface GitHubProjectIntegration {
+  configured: boolean;
+  autoCompleteOnMerge: boolean;
+  installation: {
+    accountLogin: string;
+    isActive: boolean;
+    repositories: GitHubRepository[];
+  } | null;
+}
+
+export interface GitHubAvailableRepository extends GitHubRepository {
+  githubRepoId: string;
+}
+
+export interface TaskGitHubLink {
+  id: string;
+  number: number;
+  type: "ISSUE" | "PULL_REQUEST";
+  url: string;
+  title: string;
+  state: string;
+  isDraft: boolean;
+  reviewState: string | null;
+  mergedAt: string | null;
+  syncedAt: string;
+  repository: Pick<GitHubRepository, "fullName">;
 }
 
 export interface NotificationList {

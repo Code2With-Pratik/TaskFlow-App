@@ -15,6 +15,7 @@ import { TasksModule } from './tasks/tasks.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module.js';
+import { GitHubModule } from './github/github.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -43,6 +44,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ActivityModule,
     DashboardModule,
     NotificationsModule,
+    GitHubModule,
     HealthModule,
   ],
   controllers: [AppController],

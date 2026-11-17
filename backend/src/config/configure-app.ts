@@ -13,7 +13,14 @@ export function configureApp(
   config: ConfigService,
 ): void {
   app.use(cookieParser());
-  app.use(express.json({ limit: '2mb' }));
+  app.use(
+    express.json({
+      limit: '2mb',
+      verify: (request, _response, buffer) => {
+        Object.assign(request, { rawBody: Buffer.from(buffer) });
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
   // Frontend URLs allowed to access the backend

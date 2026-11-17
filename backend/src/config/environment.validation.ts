@@ -14,6 +14,17 @@ export function validateEnvironment(environment: Environment): Environment {
   const databaseUrl = environment.DATABASE_URL;
   const accessSecret = environment.JWT_ACCESS_SECRET;
   const refreshSecret = environment.JWT_REFRESH_SECRET;
+  const githubVariables = [
+    'GITHUB_APP_ID',
+    'GITHUB_APP_SLUG',
+    'GITHUB_APP_PRIVATE_KEY',
+    'GITHUB_APP_WEBHOOK_SECRET',
+  ] as const;
+  const configuredGitHubVariables = githubVariables.filter(
+    (name) =>
+      typeof environment[name] === 'string' &&
+      (environment[name] as string).trim().length > 0,
+  );
   const accessTokenTtlSeconds = parseDuration(
     environment.ACCESS_TOKEN_TTL ?? '15m',
     'ACCESS_TOKEN_TTL',
@@ -55,6 +66,29 @@ export function validateEnvironment(environment: Environment): Environment {
     accessSecret === refreshSecret
   ) {
     errors.push('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different');
+  }
+
+  if (
+    configuredGitHubVariables.length > 0 &&
+    configuredGitHubVariables.length !== githubVariables.length
+  ) {
+    errors.push(
+      'GITHUB_APP_ID, GITHUB_APP_SLUG, GITHUB_APP_PRIVATE_KEY, and GITHUB_APP_WEBHOOK_SECRET must be configured together',
+    );
+  }
+  if (
+    configuredGitHubVariables.length === githubVariables.length &&
+    (typeof environment.GITHUB_APP_ID !== 'string' ||
+      !/^\d+$/.test(environment.GITHUB_APP_ID.trim()))
+  ) {
+    errors.push('GITHUB_APP_ID must be a positive integer');
+  }
+  if (
+    typeof environment.GITHUB_APP_SLUG === 'string' &&
+    environment.GITHUB_APP_SLUG.trim() &&
+    !/^[a-zA-Z0-9-]+$/.test(environment.GITHUB_APP_SLUG.trim())
+  ) {
+    errors.push('GITHUB_APP_SLUG must be a valid GitHub App slug');
   }
 
   if (errors.length > 0) {

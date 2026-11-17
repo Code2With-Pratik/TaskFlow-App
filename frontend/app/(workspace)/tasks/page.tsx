@@ -1,12 +1,13 @@
 "use client";
 
 import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "@/components/animated-icons";
-import { useDeferredValue, useState, useSyncExternalStore } from "react";
+import { useDeferredValue, useEffect, useState, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { IconHover } from "@/components/icon-hover";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { TaskRow } from "@/components/task-row";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -49,17 +50,30 @@ export default function TasksPage() {
   const status = selectedStatus ?? routeStatus;
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  useEffect(() => {
+    setPage(1);
+  }, [status, deferredSearch]);
 
   const query = useQuery({
-    queryKey: ["tasks", status, deferredSearch],
+    queryKey: ["tasks", status, deferredSearch, page],
     queryFn: () => {
-      const params = new URLSearchParams({ limit: "100" });
+      const params = new URLSearchParams({
+        limit: String(pageSize),
+        page: String(page),
+      });
       if (status === "OVERDUE") params.set("overdue", "true");
       else if (status !== "ALL") params.set("status", status);
       if (deferredSearch) params.set("search", deferredSearch);
       return apiFetch<PaginatedTasks>(`/tasks?${params.toString()}`);
     },
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData, previousQuery) =>
+      previousQuery?.queryKey[1] === status &&
+      previousQuery.queryKey[2] === deferredSearch
+        ? previousData
+        : undefined,
   });
 
   if (query.isLoading) return <LoadingState label="Loading your tasks…" />;
@@ -119,7 +133,12 @@ export default function TasksPage() {
         <CardContent className="p-3 sm:p-4">
           <div className="mb-2 flex items-center justify-between px-3 pt-1">
             <p className="text-xs font-medium text-muted">
-              {query.data?.total ?? 0} {query.data?.total === 1 ? "task" : "tasks"}
+              {query.data?.total
+                ? `Showing ${(page - 1) * pageSize + 1}–${Math.min(
+                    page * pageSize,
+                    query.data.total,
+                  )} of ${query.data.total} tasks`
+                : `${query.data?.total ?? 0} tasks`}
             </p>
             {query.isFetching ? <Badge>Updating</Badge> : null}
           </div>
@@ -138,6 +157,29 @@ export default function TasksPage() {
               }
             />
           )}
+          {query.data && query.data.total > pageSize ? (
+            <div className="mt-4 flex items-center justify-between border-t border-border px-3 pt-4">
+              <Button
+                disabled={page === 1 || query.isFetching}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                size="sm"
+                variant="secondary"
+              >
+                Previous
+              </Button>
+              <span className="text-xs text-muted">
+                Page {page} of {Math.ceil(query.data.total / pageSize)}
+              </span>
+              <Button
+                disabled={page * pageSize >= query.data.total || query.isFetching}
+                onClick={() => setPage((current) => current + 1)}
+                size="sm"
+                variant="secondary"
+              >
+                Next
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>

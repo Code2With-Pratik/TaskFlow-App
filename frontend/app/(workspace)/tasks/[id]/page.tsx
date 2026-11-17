@@ -15,12 +15,15 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ClipboardEvent } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { AssigneePicker } from "@/components/assignee-picker";
+import { CommentReplyComposer } from "@/components/comment-reply-composer";
+import { TaskGitHubLinks } from "@/components/task-github-links";
 import { IconHover } from "@/components/icon-hover";
+import { MentionTextarea } from "@/components/mention-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -122,6 +125,7 @@ export default function TaskDetailsPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
   const [commentImage, setCommentImage] = useState<string | null>(null);
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isPreparingImage, setIsPreparingImage] = useState(false);
   const [selectedCommentImage, setSelectedCommentImage] = useState<{
@@ -148,9 +152,20 @@ export default function TaskDetailsPage() {
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<CommentValues>({ resolver: zodResolver(commentSchema) });
   const commentField = register("content");
+  const commentContent = useWatch({ control, name: "content" }) ?? "";
+
+  useEffect(() => {
+    const commentId = window.location.hash.match(/^#comment-([a-f0-9-]+)$/i)?.[1];
+    if (!commentId || !commentsQuery.data) return;
+    document
+      .getElementById(`comment-${commentId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [commentsQuery.data]);
 
   useEffect(() => {
     if (!selectedCommentImage) return;
@@ -183,13 +198,19 @@ export default function TaskDetailsPage() {
     onError: (error) => setActionError(getErrorMessage(error)),
   });
   const addComment = useMutation({
-    mutationFn: (values: CommentValues & { imageData?: string }) =>
+    mutationFn: (
+      values: CommentValues & {
+        imageData?: string;
+        mentionedUserIds?: string[];
+      },
+    ) =>
       apiFetch<Comment>(`/tasks/${id}/comments`, {
         method: "POST",
         body: JSON.stringify(values),
       }),
     onSuccess: async () => {
       reset();
+      setMentionedUserIds([]);
       setCommentImage(null);
       setImageError(null);
       await queryClient.invalidateQueries({ queryKey: ["task-comments", id] });
@@ -345,6 +366,8 @@ export default function TaskDetailsPage() {
             </CardContent>
           </Card>
 
+          <TaskGitHubLinks taskId={id} />
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -358,11 +381,12 @@ export default function TaskDetailsPage() {
                 onSubmit={handleSubmit((values) =>
                   addComment.mutate({
                     ...values,
+                    mentionedUserIds,
                     ...(commentImage ? { imageData: commentImage } : {}),
                   }),
                 )}
               >
-                <Textarea
+                <MentionTextarea
                   aria-label="Write a comment"
                   aria-describedby={[
                     "comment-paste-hint",
@@ -375,7 +399,19 @@ export default function TaskDetailsPage() {
                   rows={3}
                   maxLength={5000}
                   aria-invalid={Boolean(errors.content)}
-                  {...commentField}
+                  name={commentField.name}
+                  onBlur={commentField.onBlur}
+                  ref={commentField.ref}
+                  value={commentContent}
+                  members={membersQuery.data}
+                  mentionIds={mentionedUserIds}
+                  onMentionIdsChange={setMentionedUserIds}
+                  onValueChange={(value) =>
+                    setValue("content", value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
                   onPaste={handleCommentPaste}
                 />
                 <p className="text-xs text-muted" id="comment-paste-hint">
@@ -431,8 +467,14 @@ export default function TaskDetailsPage() {
 
               {commentsQuery.data.length ? (
                 <div className="divide-y divide-border border-t border-border">
-                  {commentsQuery.data.map((comment) => (
-                    <article key={comment.id} className="flex gap-3 py-4">
+                  {commentsQuery.data
+                    .filter((comment) => !comment.parentId)
+                    .map((comment) => (
+                    <article
+                      className="flex gap-3 py-4"
+                      id={`comment-${comment.id}`}
+                      key={comment.id}
+                    >
                       <UserAvatar
                         className="size-8"
                         name={comment.user.name}
@@ -466,6 +508,57 @@ export default function TaskDetailsPage() {
                               src={comment.imageData}
                             />
                           </button>
+                        ) : null}
+                        {commentsQuery.data.some(
+                          (reply) => reply.parentId === comment.id,
+                        ) ||
+                        membersQuery.data.length > 0 ? (
+                          <div className="mt-3 border-l-2 border-border pl-3">
+                            {commentsQuery.data
+                              .filter((reply) => reply.parentId === comment.id)
+                              .map((reply) => (
+                                <div
+                                  className="border-b border-border py-3 last:border-b-0"
+                                  id={`comment-${reply.id}`}
+                                  key={reply.id}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <UserAvatar
+                                      className="size-6"
+                                      name={reply.user.name}
+                                      avatar={reply.user.avatar}
+                                    />
+                                    <span className="text-xs font-semibold text-foreground">
+                                      {reply.user.name}
+                                    </span>
+                                    <span className="text-[10px] text-muted">
+                                      {formatDate(reply.createdAt, {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted">
+                                    {reply.content}
+                                  </p>
+                                  {reply.imageData ? (
+                                    <img
+                                      alt={`Screenshot attached to reply by ${reply.user.name}`}
+                                      className="mt-2 max-h-48 rounded-lg border border-border object-contain"
+                                      loading="lazy"
+                                      src={reply.imageData}
+                                    />
+                                  ) : null}
+                                </div>
+                              ))}
+                            <CommentReplyComposer
+                              members={membersQuery.data}
+                              parentId={comment.id}
+                              taskId={id}
+                            />
+                          </div>
                         ) : null}
                       </div>
                     </article>

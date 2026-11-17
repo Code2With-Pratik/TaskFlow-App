@@ -80,6 +80,30 @@ export class ProjectsController {
     return this.projectsService.addMember(id, user.id, dto);
   }
 
+  @Post('invitations/:invitationId/accept')
+  acceptInvitation(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.projectsService.respondToInvitation(
+      invitationId,
+      user.id,
+      true,
+    );
+  }
+
+  @Post('invitations/:invitationId/decline')
+  declineInvitation(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.projectsService.respondToInvitation(
+      invitationId,
+      user.id,
+      false,
+    );
+  }
+
   @Get(':id/members')
   @UseGuards(ProjectRolesGuard)
   @ProjectRoles(ProjectRole.OWNER, ProjectRole.ADMIN, ProjectRole.MEMBER)

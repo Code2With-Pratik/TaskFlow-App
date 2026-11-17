@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActivityRow } from "@/components/activity-row";
+import { GitHubIntegrationPanel } from "@/components/github-integration-panel";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { TaskRow } from "@/components/task-row";
 import { IconHover } from "@/components/icon-hover";
@@ -34,7 +35,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/format";
-import type { Activity, PaginatedTasks, Project, ProjectMember, ProjectRole } from "@/types/api";
+import type { Activity, PaginatedTasks, Project, ProjectInvitation, ProjectMember, ProjectRole } from "@/types/api";
 
 const editProjectSchema = z.object({
   name: z.string().trim().min(2, "Project name must have at least 2 characters").max(120),
@@ -114,15 +115,14 @@ export default function ProjectDetailsPage() {
   });
   const addMember = useMutation({
     mutationFn: (email: string) =>
-      apiFetch<ProjectMember>(`/projects/${id}/members`, {
+      apiFetch<ProjectInvitation>(`/projects/${id}/members`, {
         method: "POST",
         body: JSON.stringify({ email, role: "MEMBER" satisfies ProjectRole }),
       }),
     onSuccess: async () => {
       setActionError(null);
       resetMember();
-      await queryClient.invalidateQueries({ queryKey: ["project-members", id] });
-      await queryClient.invalidateQueries({ queryKey: ["project", id] });
+      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => setActionError(getErrorMessage(error)),
   });
@@ -448,7 +448,7 @@ export default function ProjectDetailsPage() {
                   </div>
                   {memberErrors.email ? <p className="mt-1 text-xs text-danger-foreground">{memberErrors.email.message}</p> : null}
                   <p className="mt-2 text-[10px] leading-4 text-muted">
-                    The person must already have an account. They will be added as a project member.
+                    The person must already have an account. They’ll receive an in-app invitation and join after accepting it.
                   </p>
                 </form>
               ) : null}
@@ -457,6 +457,8 @@ export default function ProjectDetailsPage() {
               </p>
             </CardContent>
           </Card>
+
+          <GitHubIntegrationPanel projectId={id} canManage={canManage} />
 
           <Card>
             <CardHeader>

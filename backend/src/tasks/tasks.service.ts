@@ -102,6 +102,7 @@ export class TasksService {
             message: `You were assigned "${task.title}" in ${task.project.name}.`,
             type: 'TASK_ASSIGNED' as const,
             userId: recipientId,
+            href: `/tasks/${task.id}`,
           })),
         });
       }
@@ -255,6 +256,7 @@ export class TasksService {
         message: string;
         type: 'TASK_ASSIGNED' | 'TASK_STATUS_UPDATED';
         userId: string;
+        href: string;
       }> = [];
       const existingAssigneeIds = new Set(
         existing.assignees.map(({ userId: assigneeId }) => assigneeId),
@@ -267,6 +269,7 @@ export class TasksService {
               message: `You were assigned "${task.title}" in ${task.project.name}.`,
               type: 'TASK_ASSIGNED',
               userId: assigneeId,
+              href: `/tasks/${task.id}`,
             });
           }
         }
@@ -285,6 +288,7 @@ export class TasksService {
             message: `"${task.title}" is now ${task.status.replace('_', ' ').toLowerCase()}.`,
             type: 'TASK_STATUS_UPDATED',
             userId: recipientId,
+            href: `/tasks/${task.id}`,
           });
         }
       }

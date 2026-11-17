@@ -10,6 +10,8 @@ import {
   TriangleAlert,
   UserRoundPlus,
 } from "@/components/animated-icons";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { IconHover } from "@/components/icon-hover";
@@ -26,13 +28,16 @@ const icons: Record<NotificationType, typeof Bell> = {
   TASK_ASSIGNED: UserRoundPlus,
   TASK_STATUS_UPDATED: Check,
   COMMENT_ADDED: MessageSquareText,
+  COMMENT_MENTIONED: MessageSquareText,
   PROJECT_INVITATION: FolderPlus,
   TASK_DUE_SOON: Clock3,
   TASK_OVERDUE: TriangleAlert,
+  GITHUB_PULL_REQUEST_MERGED: Check,
 };
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const query = useQuery({
     queryKey: ["notifications"],
     queryFn: () => apiFetch<NotificationList>("/notifications"),
@@ -46,6 +51,23 @@ export default function NotificationsPage() {
   const markAllRead = useMutation({
     mutationFn: () => apiFetch<void>("/notifications/read-all", { method: "PATCH" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+  const respondToInvitation = useMutation({
+    mutationFn: ({
+      invitationId,
+      response,
+    }: {
+      invitationId: string;
+      response: "accept" | "decline";
+    }) =>
+      apiFetch<{ projectId: string; accepted: boolean }>(
+        `/projects/invitations/${invitationId}/${response}`,
+        { method: "POST" },
+      ),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      if (result.accepted) router.push(`/projects/${result.projectId}`);
+    },
   });
 
   if (query.isLoading) return <LoadingState label="Loading notifications…" />;
@@ -76,6 +98,11 @@ export default function NotificationsPage() {
           {getErrorMessage(markRead.error ?? markAllRead.error)}
         </p>
       ) : null}
+      {respondToInvitation.error ? (
+        <p className="mb-4 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger-foreground" role="alert">
+          {getErrorMessage(respondToInvitation.error)}
+        </p>
+      ) : null}
       <Card>
         <CardContent className="p-3 sm:p-5">
           {query.data.data.length ? (
@@ -84,8 +111,22 @@ export default function NotificationsPage() {
                 <NotificationRow
                   key={notification.id}
                   notification={notification}
-                  isPending={markRead.isPending}
+                  isPending={markRead.isPending || respondToInvitation.isPending}
                   onMarkRead={() => markRead.mutate(notification.id)}
+                  onAccept={() =>
+                    notification.projectInvitation &&
+                    respondToInvitation.mutate({
+                      invitationId: notification.projectInvitation.id,
+                      response: "accept",
+                    })
+                  }
+                  onDecline={() =>
+                    notification.projectInvitation &&
+                    respondToInvitation.mutate({
+                      invitationId: notification.projectInvitation.id,
+                      response: "decline",
+                    })
+                  }
                 />
               ))}
             </div>
@@ -106,12 +147,19 @@ function NotificationRow({
   notification,
   isPending,
   onMarkRead,
+  onAccept,
+  onDecline,
 }: {
   notification: Notification;
   isPending: boolean;
   onMarkRead: () => void;
+  onAccept: () => void;
+  onDecline: () => void;
 }) {
   const Icon = icons[notification.type];
+  const pendingInvitation =
+    notification.projectInvitation?.status === "PENDING" &&
+    notification.type === "PROJECT_INVITATION";
   return (
     <IconHover>
       <article
@@ -124,10 +172,43 @@ function NotificationRow({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">{notification.title}</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              {notification.href && !pendingInvitation ? (
+                <Link
+                  className="hover:text-brand"
+                  href={notification.href}
+                  onClick={onMarkRead}
+                >
+                  {notification.title}
+                </Link>
+              ) : notification.title}
+            </h2>
             {!notification.isRead ? <Badge>New</Badge> : null}
           </div>
           <p className="mt-1 text-sm leading-6 text-muted">{notification.message}</p>
+          {pendingInvitation ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button
+                disabled={isPending}
+                onClick={onAccept}
+                size="sm"
+              >
+                Accept
+              </Button>
+              <Button
+                disabled={isPending}
+                onClick={onDecline}
+                size="sm"
+                variant="secondary"
+              >
+                Decline
+              </Button>
+              <span className="text-xs text-muted">
+                {notification.projectInvitation?.project.name} · invited by{" "}
+                {notification.projectInvitation?.inviter.name}
+              </span>
+            </div>
+          ) : null}
           <p className="mt-1.5 text-xs text-muted">
             {formatDate(notification.createdAt, {
               month: "short",

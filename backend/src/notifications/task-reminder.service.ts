@@ -57,7 +57,7 @@ export class TaskReminderService {
         if (existing) continue;
 
         await this.prisma.notification.create({
-          data: { title, message, type, userId },
+          data: { title, message, type, userId, href: `/tasks/${task.id}` },
         });
         this.notificationsGateway.emitNewNotification(userId);
       }
