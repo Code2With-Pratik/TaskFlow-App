@@ -103,36 +103,44 @@ export class CommentsService {
         },
       });
 
-      const recipients = new Map<string, 'COMMENT_ADDED' | 'COMMENT_MENTIONED'>();
+      type CommentNotification =
+        | { type: 'COMMENT_ADDED' }
+        | { type: 'COMMENT_MENTIONED'; name: string };
+      const recipients = new Map<string, CommentNotification>();
       const commenters = new Set([
         ...task.assignees.map(({ userId: assigneeId }) => assigneeId),
         task.createdById,
         ...(parent ? [parent.userId] : []),
       ]);
       for (const recipientId of commenters) {
-        if (recipientId !== userId) recipients.set(recipientId, 'COMMENT_ADDED');
-      }
-      for (const recipientId of mentionedUserIds) {
         if (recipientId !== userId) {
-          recipients.set(recipientId, 'COMMENT_MENTIONED');
+          recipients.set(recipientId, { type: 'COMMENT_ADDED' });
+        }
+      }
+      for (const mention of comment.mentions) {
+        if (mention.user.id !== userId) {
+          recipients.set(mention.user.id, {
+            type: 'COMMENT_MENTIONED',
+            name: mention.user.name,
+          });
         }
       }
       if (recipients.size > 0) {
         await transaction.notification.createMany({
-          data: Array.from(recipients, ([recipientId, type]) => ({
+          data: Array.from(recipients, ([recipientId, recipient]) => ({
             title:
-              type === 'COMMENT_MENTIONED'
+              recipient.type === 'COMMENT_MENTIONED'
                 ? 'You were mentioned'
                 : dto.parentId
                   ? 'New task reply'
                   : 'New task comment',
             message:
-              type === 'COMMENT_MENTIONED'
-                ? `${comment.user.name} mentioned you on "${task.title}".`
+              recipient.type === 'COMMENT_MENTIONED'
+                ? `${comment.user.name} mentioned @${recipient.name} on "${task.title}".`
                 : dto.parentId
                   ? `${comment.user.name} replied to a comment on "${task.title}".`
                   : `${comment.user.name} commented on "${task.title}".`,
-            type,
+            type: recipient.type,
             userId: recipientId,
             href: `/tasks/${taskId}#comment-${comment.id}`,
           })),

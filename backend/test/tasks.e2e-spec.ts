@@ -344,6 +344,12 @@ describe('Tasks, comments, and activity (e2e)', () => {
         'COMMENT_MENTIONED',
       ]),
     );
+    expect(
+      ownerNotifications.body.data.find(
+        (notification: { type: string }) =>
+          notification.type === 'COMMENT_MENTIONED',
+      ).message,
+    ).toContain('@Task Owner');
 
     const activity = await request(app.getHttpServer())
       .get(`/projects/${projectId}/activities`)

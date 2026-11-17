@@ -14,6 +14,8 @@
   --danger: #FF0000;
   --danger-foreground: #991b1b;
   --danger-action: #FF0000;
+  --invitation-accept-background: #000000;
+  --invitation-accept-foreground: #ffffff;
   --primary-action-edge: #000000;
   --primary-action-shadow: 0 1px 2px rgb(0 0 0 / 14%);
   --glass-surface: color-mix(in srgb, var(--surface) 84%, transparent);
@@ -35,6 +37,8 @@
   --danger: #FF0000;
   --danger-foreground: #ff9a9a;
   --danger-action: #FF0000;
+  --invitation-accept-background: #ffffff;
+  --invitation-accept-foreground: #000000;
   --primary-action-edge: #5c5c5c;
   --primary-action-shadow:
     inset 0 1px 0 rgb(255 255 255 / 8%), 0 1px 3px rgb(0 0 0 / 55%);

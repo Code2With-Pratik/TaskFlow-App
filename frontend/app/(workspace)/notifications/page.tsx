@@ -15,11 +15,13 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
 import { IconHover } from "@/components/icon-hover";
+import { MentionedText } from "@/components/mentioned-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeading } from "@/components/ui/page-heading";
+import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import type { Notification, NotificationList, NotificationType } from "@/types/api";
@@ -36,6 +38,7 @@ const icons: Record<NotificationType, typeof Bell> = {
 };
 
 export default function NotificationsPage() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
   const query = useQuery({
@@ -115,6 +118,7 @@ export default function NotificationsPage() {
                 <NotificationRow
                   key={notification.id}
                   notification={notification}
+                  userName={user?.name}
                   isPending={markRead.isPending || respondToInvitation.isPending}
                   onMarkRead={() => markRead.mutate(notification.id)}
                   onAccept={() =>
@@ -149,12 +153,14 @@ export default function NotificationsPage() {
 
 function NotificationRow({
   notification,
+  userName,
   isPending,
   onMarkRead,
   onAccept,
   onDecline,
 }: {
   notification: Notification;
+  userName?: string;
   isPending: boolean;
   onMarkRead: () => void;
   onAccept: () => void;
@@ -194,12 +200,26 @@ function NotificationRow({
             </h2>
             {!notification.isRead ? <Badge>New</Badge> : null}
           </div>
-          <p className="mt-1 text-sm leading-6 text-muted">{notification.message}</p>
+          <p className="mt-1 text-sm leading-6 text-muted">
+            <MentionedText
+              names={
+                notification.type === "COMMENT_MENTIONED" && userName
+                  ? [userName]
+                  : []
+              }
+              text={notification.message}
+            />
+          </p>
           {pendingInvitation ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button
                 disabled={isPending}
                 onClick={onAccept}
+                className="hover:opacity-90 active:opacity-80"
+                style={{
+                  backgroundColor: "var(--invitation-accept-background)",
+                  color: "var(--invitation-accept-foreground)",
+                }}
                 size="sm"
               >
                 Accept
@@ -208,7 +228,7 @@ function NotificationRow({
                 disabled={isPending}
                 onClick={onDecline}
                 size="sm"
-                variant="secondary"
+                variant="danger"
               >
                 Decline
               </Button>

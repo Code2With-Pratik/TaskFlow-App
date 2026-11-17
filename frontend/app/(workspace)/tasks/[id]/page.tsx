@@ -24,6 +24,7 @@ import { CommentReplyComposer } from "@/components/comment-reply-composer";
 import { TaskGitHubLinks } from "@/components/task-github-links";
 import { IconHover } from "@/components/icon-hover";
 import { MentionTextarea } from "@/components/mention-textarea";
+import { MentionedText } from "@/components/mentioned-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -479,7 +480,16 @@ export default function TaskDetailsPage() {
                           <span className="text-xs font-semibold text-foreground">{comment.user.name}</span>
                           <span className="text-[10px] text-muted">{formatDate(comment.createdAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
                         </div>
-                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted">{comment.content}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted">
+                          <MentionedText
+                            names={
+                              comment.mentions?.map(
+                                ({ user: mentionedUser }) => mentionedUser.name,
+                              ) ?? []
+                            }
+                            text={comment.content}
+                          />
+                        </p>
                         {comment.imageData ? (
                           <button
                             aria-label={`View screenshot attached to comment by ${comment.user.name}`}
@@ -531,7 +541,15 @@ export default function TaskDetailsPage() {
                                     </span>
                                   </div>
                                   <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted">
-                                    {reply.content}
+                                    <MentionedText
+                                      names={
+                                        reply.mentions?.map(
+                                          ({ user: mentionedUser }) =>
+                                            mentionedUser.name,
+                                        ) ?? []
+                                      }
+                                      text={reply.content}
+                                    />
                                   </p>
                                   {reply.imageData ? (
                                     <img
