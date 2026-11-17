@@ -178,7 +178,7 @@ export class GitHubIntegrationService {
     if (!details.account?.login) {
       throw new BadGatewayException('GitHub did not return an installation account');
     }
-    await this.prisma.githubInstallation.upsert({
+    await this.prisma.gitHubInstallation.upsert({
       where: { projectId: payload.projectId },
       create: {
         projectId: payload.projectId,
@@ -216,7 +216,7 @@ export class GitHubIntegrationService {
 
     const selected = new Set(
       (
-        await this.prisma.githubRepository.findMany({
+        await this.prisma.gitHubRepository.findMany({
           where: { installationId: installation.id },
           select: { githubRepoId: true },
         })
@@ -266,7 +266,7 @@ export class GitHubIntegrationService {
         'That repository is not available to the project GitHub App installation',
       );
     }
-    return this.prisma.githubRepository.upsert({
+    return this.prisma.gitHubRepository.upsert({
       where: {
         installationId_fullName: {
           installationId: installation.id,
@@ -342,7 +342,7 @@ export class GitHubIntegrationService {
 
     const parsedUrl = this.parseWorkUrl(dto.url);
     const installation = await this.getActiveInstallation(task.projectId);
-    const repository = await this.prisma.githubRepository.findFirst({
+    const repository = await this.prisma.gitHubRepository.findFirst({
       where: {
         installationId: installation.id,
         fullName: { equals: parsedUrl.fullName, mode: 'insensitive' },
@@ -458,7 +458,7 @@ export class GitHubIntegrationService {
     if (event === 'installation' && payload.action === 'deleted') {
       const installation = this.asRecord(payload.installation);
       if (typeof installation?.id === 'number') {
-        await this.prisma.githubInstallation.updateMany({
+        await this.prisma.gitHubInstallation.updateMany({
           where: { installationId: installation.id },
           data: { isActive: false },
         });
@@ -636,7 +636,7 @@ export class GitHubIntegrationService {
   }
 
   private async getActiveInstallation(projectId: string) {
-    const installation = await this.prisma.githubInstallation.findUnique({
+    const installation = await this.prisma.gitHubInstallation.findUnique({
       where: { projectId },
     });
     if (!installation || !installation.isActive) {

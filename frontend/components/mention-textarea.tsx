@@ -92,6 +92,7 @@ export function MentionTextarea({
               key={member.user.id}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => selectMention(member)}
+              aria-selected={false}
               role="option"
               type="button"
             >

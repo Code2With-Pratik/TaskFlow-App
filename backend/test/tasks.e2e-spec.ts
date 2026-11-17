@@ -71,6 +71,24 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .set('Authorization', `Bearer ${tokens.owner}`)
       .send({ email: accounts.member.email })
       .expect(201);
+    const invitation = await prisma.projectInvitation.findUniqueOrThrow({
+      where: {
+        projectId_inviteeId: {
+          projectId,
+          inviteeId: (
+            await prisma.user.findUniqueOrThrow({
+              where: { email: accounts.member.email },
+              select: { id: true },
+            })
+          ).id,
+        },
+      },
+    });
+    expect(invitation.status).toBe('PENDING');
+    await request(app.getHttpServer())
+      .post(`/projects/invitations/${invitation.id}/accept`)
+      .set('Authorization', authorization('member'))
+      .expect(201);
   });
 
   afterAll(async () => {
@@ -161,7 +179,7 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .get('/notifications')
       .set('Authorization', authorization('member'))
       .expect(200);
-    expect(memberNotifications.body.unreadCount).toBe(2);
+    expect(memberNotifications.body.unreadCount).toBe(1);
     expect(
       memberNotifications.body.data.map(
         (notification: { type: string }) => notification.type,
@@ -198,7 +216,7 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .get('/notifications')
       .set('Authorization', authorization('member'))
       .expect(200);
-    expect(updated.body.unreadCount).toBe(1);
+    expect(updated.body.unreadCount).toBe(0);
     expect(
       updated.body.data.find(
         (notification: { id: string }) => notification.id === assignment.id,
@@ -258,7 +276,17 @@ describe('Tasks, comments, and activity (e2e)', () => {
     const comment = await request(app.getHttpServer())
       .post(`/tasks/${taskId}/comments`)
       .set('Authorization', `Bearer ${tokens.member}`)
-      .send({ content: 'I am working on this checklist.' })
+      .send({
+        content: 'I am working on this checklist. @Task Owner',
+        mentionedUserIds: [
+          (
+            await prisma.user.findUniqueOrThrow({
+              where: { email: accounts.owner.email },
+              select: { id: true },
+            })
+          ).id,
+        ],
+      })
       .expect(201);
     commentId = comment.body.id;
 
@@ -274,6 +302,16 @@ describe('Tasks, comments, and activity (e2e)', () => {
       imageData,
     });
 
+    const reply = await request(app.getHttpServer())
+      .post(`/tasks/${taskId}/comments`)
+      .set('Authorization', authorization('owner'))
+      .send({
+        content: 'Thanks for the update.',
+        parentId: commentId,
+      })
+      .expect(201);
+    expect(reply.body.parentId).toBe(commentId);
+
     await request(app.getHttpServer())
       .post(`/tasks/${taskId}/comments`)
       .set('Authorization', authorization('owner'))
@@ -284,10 +322,11 @@ describe('Tasks, comments, and activity (e2e)', () => {
       .get(`/tasks/${taskId}/comments`)
       .set('Authorization', `Bearer ${tokens.owner}`)
       .expect(200);
-    expect(comments.body).toHaveLength(2);
+    expect(comments.body).toHaveLength(3);
     expect(comments.body[0].content).toBe('I am working on this checklist.');
     expect(comments.body[0].imageData).toBeNull();
     expect(comments.body[1].imageData).toBe(imageData);
+    expect(comments.body[2].parentId).toBe(commentId);
     expect(comments.body[0].user).not.toHaveProperty('passwordHash');
 
     const ownerNotifications = await request(app.getHttpServer())
@@ -299,7 +338,11 @@ describe('Tasks, comments, and activity (e2e)', () => {
         (notification: { type: string }) => notification.type,
       ),
     ).toEqual(
-      expect.arrayContaining(['TASK_STATUS_UPDATED', 'COMMENT_ADDED']),
+      expect.arrayContaining([
+        'TASK_STATUS_UPDATED',
+        'COMMENT_ADDED',
+        'COMMENT_MENTIONED',
+      ]),
     );
 
     const activity = await request(app.getHttpServer())
@@ -309,10 +352,12 @@ describe('Tasks, comments, and activity (e2e)', () => {
     expect(activity.body.map((entry: { action: string }) => entry.action)).toEqual(
       expect.arrayContaining([
         'project.created',
-        'project.member_added',
+        'project.member_invited',
+        'project.invitation_accepted',
         'task.created',
         'task.status_updated',
         'task.comment_added',
+        'task.comment_replied',
       ]),
     );
 

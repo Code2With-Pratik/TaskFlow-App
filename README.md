@@ -104,6 +104,34 @@ uses `SameSite=None; Secure`. Browsers that block third-party cookies may
 restrict refresh-token persistence; custom frontend and API hostnames under
 the same site are the most reliable long-term setup.
 
+## Optional: connect GitHub
+
+GitHub issue and pull-request linking uses a GitHub App. Create an App and set
+its Setup URL to
+`https://<your-api-service>.onrender.com/integrations/github/callback` and its
+webhook URL to `https://<your-api-service>.onrender.com/integrations/github/webhook`.
+Subscribe to `installation`, `pull_request`, and `pull_request_review` events.
+Grant read-only repository metadata, issues, and pull requests permissions.
+
+Add these secrets to the Render API service (never to Vercel or source control):
+
+| Variable | Value |
+| --- | --- |
+| `GITHUB_APP_ID` | GitHub App ID |
+| `GITHUB_APP_SLUG` | App slug from its GitHub URL |
+| `GITHUB_APP_PRIVATE_KEY` | Contents of the App's downloaded private key |
+| `GITHUB_APP_WEBHOOK_SECRET` | The webhook secret configured in the GitHub App |
+
+Set all four variables together and redeploy. Until configured, GitHub controls
+remain disabled. Project owners/admins can install the App for a project,
+select repositories, and link issues or pull requests to tasks. Pull-request
+state and review summaries update through verified GitHub webhooks. Projects
+may opt into moving linked tasks to Done when a PR is merged.
+
+Project invitations are in-app only: invited collaborators must already have
+a TaskFlow account, and they join after accepting the invitation from their
+notifications. Task comments support replies and project-member mentions.
+
 ## Run and test locally
 
 The easiest way to start the API, PostgreSQL, and frontend together is the

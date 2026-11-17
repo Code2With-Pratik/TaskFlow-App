@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ClipboardEvent } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ErrorState, LoadingState } from "@/components/query-state";
@@ -28,7 +28,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
@@ -149,15 +148,11 @@ export default function TaskDetailsPage() {
     enabled: Boolean(task?.projectId),
   });
   const {
-    register,
     handleSubmit,
     reset,
     control,
-    setValue,
     formState: { errors },
   } = useForm<CommentValues>({ resolver: zodResolver(commentSchema) });
-  const commentField = register("content");
-  const commentContent = useWatch({ control, name: "content" }) ?? "";
 
   useEffect(() => {
     const commentId = window.location.hash.match(/^#comment-([a-f0-9-]+)$/i)?.[1];
@@ -386,33 +381,32 @@ export default function TaskDetailsPage() {
                   }),
                 )}
               >
-                <MentionTextarea
-                  aria-label="Write a comment"
-                  aria-describedby={[
-                    "comment-paste-hint",
-                    errors.content ? "comment-content-error" : null,
-                    imageError ? "comment-image-error" : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  placeholder="Share an update or ask a question…"
-                  rows={3}
-                  maxLength={5000}
-                  aria-invalid={Boolean(errors.content)}
-                  name={commentField.name}
-                  onBlur={commentField.onBlur}
-                  ref={commentField.ref}
-                  value={commentContent}
-                  members={membersQuery.data}
-                  mentionIds={mentionedUserIds}
-                  onMentionIdsChange={setMentionedUserIds}
-                  onValueChange={(value) =>
-                    setValue("content", value, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }
-                  onPaste={handleCommentPaste}
+                <Controller
+                  control={control}
+                  name="content"
+                  render={({ field }) => (
+                    <MentionTextarea
+                      aria-label="Write a comment"
+                      aria-describedby={[
+                        "comment-paste-hint",
+                        errors.content ? "comment-content-error" : null,
+                        imageError ? "comment-image-error" : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      aria-invalid={Boolean(errors.content)}
+                      maxLength={5000}
+                      members={membersQuery.data}
+                      mentionIds={mentionedUserIds}
+                      onBlur={field.onBlur}
+                      onMentionIdsChange={setMentionedUserIds}
+                      onPaste={handleCommentPaste}
+                      onValueChange={field.onChange}
+                      placeholder="Share an update or ask a question…"
+                      rows={3}
+                      value={field.value ?? ""}
+                    />
+                  )}
                 />
                 <p className="text-xs text-muted" id="comment-paste-hint">
                   You can also paste a screenshot.

@@ -82,6 +82,7 @@ credentialed requests to the configured API origin.
 | Activity | `GET /projects/:projectId/activities` |
 | Dashboard | `GET /dashboard/summary` |
 | Notifications | `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all` |
+| GitHub | Project installation and repository endpoints, task issue/PR links, verified webhook callback |
 
 Every project or task query is scoped to the caller's project memberships.
 Project role guards protect owner/admin operations; task assignees must already
@@ -95,6 +96,22 @@ persisted notifications. The authenticated Socket.IO namespace
 Connections are disconnected when that token expires. Daily reminders run at
 08:00 UTC for assigned tasks due within 24 hours or already overdue; duplicate
 reminders for the same task and day are suppressed.
+
+Project invitations remain pending until an existing TaskFlow user accepts or
+declines from in-app notifications. Task comments support one reply level and
+notifications for selected project-member mentions. Notifications can link
+directly to the related task or project.
+
+GitHub App support is optional. Configure `GITHUB_APP_ID`, `GITHUB_APP_SLUG`,
+`GITHUB_APP_PRIVATE_KEY`, and `GITHUB_APP_WEBHOOK_SECRET` together to enable
+project installation, repository selection, issue/pull-request linking, review
+state visibility, and verified pull-request webhooks. Set the GitHub App Setup
+URL to `/integrations/github/callback`, its webhook URL to
+`/integrations/github/webhook`, and subscribe to `installation`,
+`pull_request`, and `pull_request_review`. Repository metadata, issues, and
+pull requests require read-only permissions. Project owners/admins connect an
+installation and select repositories; project members can link work to tasks.
+Automatic task completion on PR merge is opt-in per project.
 
 ## NestJS concepts in this backend
 

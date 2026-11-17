@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "@/components/animated-icons";
-import { useDeferredValue, useEffect, useState, useSyncExternalStore } from "react";
+import { useDeferredValue, useState, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { IconHover } from "@/components/icon-hover";
 import { ErrorState, LoadingState } from "@/components/query-state";
@@ -50,12 +50,10 @@ export default function TasksPage() {
   const status = selectedStatus ?? routeStatus;
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
-  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ filterKey: "", page: 1 });
   const pageSize = 20;
-
-  useEffect(() => {
-    setPage(1);
-  }, [status, deferredSearch]);
+  const filterKey = `${status}\u0000${deferredSearch}`;
+  const page = pagination.filterKey === filterKey ? pagination.page : 1;
 
   const query = useQuery({
     queryKey: ["tasks", status, deferredSearch, page],
@@ -161,7 +159,9 @@ export default function TasksPage() {
             <div className="mt-4 flex items-center justify-between border-t border-border px-3 pt-4">
               <Button
                 disabled={page === 1 || query.isFetching}
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                onClick={() =>
+                  setPagination({ filterKey, page: Math.max(1, page - 1) })
+                }
                 size="sm"
                 variant="secondary"
               >
@@ -172,7 +172,7 @@ export default function TasksPage() {
               </span>
               <Button
                 disabled={page * pageSize >= query.data.total || query.isFetching}
-                onClick={() => setPage((current) => current + 1)}
+                onClick={() => setPagination({ filterKey, page: page + 1 })}
                 size="sm"
                 variant="secondary"
               >
