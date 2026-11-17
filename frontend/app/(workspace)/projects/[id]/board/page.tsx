@@ -15,9 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeading } from "@/components/ui/page-heading";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, getErrorMessage } from "@/lib/api";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import type { PaginatedTasks, Project, ProjectMember, Task, TaskPriority, TaskStatus } from "@/types/api";
 
 const columns: Array<{ status: TaskStatus; label: string; tone: string }> = [
@@ -240,12 +241,12 @@ export default function ProjectBoardPage() {
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                       {task.assignee ? (
-                        <span
-                          className="grid size-7 place-items-center rounded-full bg-brand/10 text-[9px] font-semibold text-brand"
+                        <UserAvatar
+                          className="size-7 text-[9px]"
                           title={task.assignee.name}
-                        >
-                          {initials(task.assignee.name)}
-                        </span>
+                          name={task.assignee.name}
+                          avatar={task.assignee.avatar}
+                        />
                       ) : (
                         <span className="text-[10px] text-muted">Unassigned</span>
                       )}

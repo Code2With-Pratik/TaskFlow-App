@@ -68,6 +68,32 @@ describe('AuthController (e2e)', () => {
     expect(response.body).not.toHaveProperty('refreshTokenHash');
   });
 
+  it('updates and returns the profile designation and avatar', async () => {
+    const avatar =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lQsAAAAASUVORK5CYII=';
+    const response = await request(app.getHttpServer())
+      .patch('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ designation: 'Product Designer', avatar })
+      .expect(200);
+
+    expect(response.body.designation).toBe('Product Designer');
+    expect(response.body.avatar).toBe(avatar);
+
+    const profile = await request(app.getHttpServer())
+      .get('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(profile.body.designation).toBe('Product Designer');
+    expect(profile.body.avatar).toBe(avatar);
+
+    await request(app.getHttpServer())
+      .patch('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ avatar: 'data:image/png;base64,SGVsbG8=' })
+      .expect(400);
+  });
+
   it('rotates refresh tokens and rejects the previous token', async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/refresh')

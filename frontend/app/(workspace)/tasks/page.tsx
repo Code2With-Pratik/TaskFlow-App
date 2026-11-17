@@ -59,6 +59,7 @@ export default function TasksPage() {
       if (deferredSearch) params.set("search", deferredSearch);
       return apiFetch<PaginatedTasks>(`/tasks?${params.toString()}`);
     },
+    placeholderData: (previousData) => previousData,
   });
 
   if (query.isLoading) return <LoadingState label="Loading your tasks…" />;

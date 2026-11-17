@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Mail, ShieldCheck, UserRound } from "@/components/animated-icons";
+import { Check, ImagePlus, Mail, ShieldCheck, Trash2, UserRound } from "@/components/animated-icons";
 import { IconHover } from "@/components/icon-hover";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -12,20 +12,46 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeading } from "@/components/ui/page-heading";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import type { User } from "@/types/api";
+
+const MAX_AVATAR_BYTES = 1_048_576;
+const ACCEPTED_AVATAR_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Name must have at least 2 characters").max(80),
+  designation: z.string().trim().max(100, "Designation must be 100 characters or fewer"),
 });
 type ProfileValues = z.infer<typeof profileSchema>;
+
+function readAvatarFile(file: File): Promise<string> {
+  if (!ACCEPTED_AVATAR_TYPES.has(file.type)) {
+    return Promise.reject(new Error("Choose a PNG, JPEG, or WebP image."));
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    return Promise.reject(new Error("Choose an image smaller than 1 MiB."));
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("The image could not be read. Try another file."));
+    };
+    reader.onerror = () => reject(new Error("The image could not be read. Try another file."));
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function ProfilePage() {
   const { updateUser } = useAuth();
   const queryClient = useQueryClient();
   const [success, setSuccess] = useState(false);
+  const [avatarOverride, setAvatarOverride] = useState<string | null>();
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const profileQuery = useQuery({
     queryKey: ["profile"],
     queryFn: () => apiFetch<User>("/users/me"),
@@ -37,23 +63,38 @@ export default function ProfilePage() {
     formState: { errors },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { name: "" },
+    defaultValues: { name: "", designation: "" },
   });
 
   useEffect(() => {
-    if (profileQuery.data) reset({ name: profileQuery.data.name });
+    if (profileQuery.data) {
+      reset({
+        name: profileQuery.data.name,
+        designation: profileQuery.data.designation ?? "",
+      });
+    }
   }, [profileQuery.data, reset]);
+  const avatar = avatarOverride === undefined
+    ? profileQuery.data?.avatar ?? null
+    : avatarOverride;
 
   const updateProfile = useMutation({
     mutationFn: (values: ProfileValues) =>
       apiFetch<User>("/users/me", {
         method: "PATCH",
-        body: JSON.stringify({ name: values.name }),
+        body: JSON.stringify({
+          name: values.name,
+          designation: values.designation || null,
+          avatar,
+        }),
       }),
     onSuccess: async (user) => {
       updateUser(user);
+      queryClient.setQueryData(["profile"], user);
       setSuccess(true);
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] !== "profile",
+      });
     },
   });
 
@@ -76,11 +117,16 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <span className="grid size-14 place-items-center rounded-2xl bg-brand/10 text-lg font-semibold text-brand">
-              {initials(profile.name)}
-            </span>
+            <UserAvatar
+              className="size-14 rounded-2xl text-lg"
+              name={profile.name}
+              avatar={avatar}
+            />
             <div className="min-w-0">
               <h2 className="truncate text-base font-semibold text-foreground">{profile.name}</h2>
+              {profile.designation ? (
+                <p className="mt-1 truncate text-sm text-muted">{profile.designation}</p>
+              ) : null}
               <p className="mt-1 truncate text-sm text-muted">{profile.email}</p>
             </div>
           </div>
@@ -104,6 +150,62 @@ export default function ProfilePage() {
                 {...register("name")}
               />
               {errors.name ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.name.message}</p> : null}
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-designation">
+                Designation
+              </label>
+              <Input
+                id="profile-designation"
+                autoComplete="organization-title"
+                placeholder="e.g. Product Designer"
+                aria-invalid={Boolean(errors.designation)}
+                {...register("designation")}
+              />
+              {errors.designation ? <p className="mt-1.5 text-xs text-danger-foreground">{errors.designation.message}</p> : null}
+            </div>
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Profile photo</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <label
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-surface-secondary"
+                  htmlFor="profile-avatar"
+                >
+                  <ImagePlus size={15} />
+                  Upload image
+                  <input
+                    className="sr-only"
+                    id="profile-avatar"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      setAvatarError(null);
+                      void readAvatarFile(file)
+                        .then(setAvatarOverride)
+                        .catch((error: unknown) => setAvatarError(getErrorMessage(error)));
+                    }}
+                  />
+                </label>
+                {avatar ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setAvatarOverride(null);
+                      setAvatarError(null);
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    Remove photo
+                  </Button>
+                ) : null}
+              </div>
+              <p className="mt-1.5 text-xs text-muted">PNG, JPEG, or WebP, up to 1 MiB.</p>
+              {avatarError ? <p className="mt-1.5 text-xs text-danger-foreground" role="alert">{avatarError}</p> : null}
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground" htmlFor="profile-email">

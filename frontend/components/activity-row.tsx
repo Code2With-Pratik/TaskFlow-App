@@ -1,6 +1,7 @@
 import { ArrowUpRight, CircleCheck, MessageCircle, Plus, RefreshCw } from "@/components/animated-icons";
 import { IconHover } from "@/components/icon-hover";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate } from "@/lib/format";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import type { Activity } from "@/types/api";
 
 const actionIcons: Record<string, typeof Plus> = {
@@ -34,9 +35,11 @@ export function ActivityRow({ activity }: { activity: Activity }) {
             })}
           </p>
         </div>
-        <span className="hidden size-7 shrink-0 place-items-center rounded-full bg-surface-secondary text-[9px] font-semibold text-muted sm:grid">
-          {initials(activity.user.name)}
-        </span>
+        <UserAvatar
+          className="hidden size-7 bg-surface-secondary text-[9px] text-muted sm:grid"
+          name={activity.user.name}
+          avatar={activity.user.avatar}
+        />
       </div>
     </IconHover>
   );

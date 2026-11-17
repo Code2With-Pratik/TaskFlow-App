@@ -14,6 +14,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string | null;
+  designation: string | null;
   createdAt: string;
   updatedAt: string;
 }

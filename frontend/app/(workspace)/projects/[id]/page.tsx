@@ -30,9 +30,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { PageHeading } from "@/components/ui/page-heading";
 import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import type { Activity, PaginatedTasks, Project, ProjectMember, ProjectRole } from "@/types/api";
 
 const editProjectSchema = z.object({
@@ -371,9 +372,11 @@ export default function ProjectDetailsPage() {
               <div className="space-y-1">
                 {members.map((member) => (
                   <div key={member.id} className="flex flex-wrap items-center gap-2 rounded-xl px-2 py-2">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand/10 text-[10px] font-semibold text-brand">
-                      {initials(member.user.name)}
-                    </span>
+                    <UserAvatar
+                      className="size-8"
+                      name={member.user.name}
+                      avatar={member.user.avatar}
+                    />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-medium text-foreground">{member.user.name}</span>
                       <span className="block truncate text-[10px] text-muted">{member.user.email}</span>

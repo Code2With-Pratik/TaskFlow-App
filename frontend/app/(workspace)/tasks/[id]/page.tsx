@@ -25,9 +25,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/app/auth-provider";
 import { apiFetch, getErrorMessage } from "@/lib/api";
-import { formatDate, fromDateInputValue, initials, toDateInputValue } from "@/lib/format";
+import { formatDate, fromDateInputValue, toDateInputValue } from "@/lib/format";
 import type { Comment, ProjectMember, Task, TaskPriority, TaskStatus } from "@/types/api";
 
 const commentSchema = z.object({
@@ -429,9 +430,11 @@ export default function TaskDetailsPage() {
                 <div className="divide-y divide-border border-t border-border">
                   {commentsQuery.data.map((comment) => (
                     <article key={comment.id} className="flex gap-3 py-4">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand/10 text-[10px] font-semibold text-brand">
-                        {initials(comment.user.name)}
-                      </span>
+                      <UserAvatar
+                        className="size-8"
+                        name={comment.user.name}
+                        avatar={comment.user.avatar}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="text-xs font-semibold text-foreground">{comment.user.name}</span>

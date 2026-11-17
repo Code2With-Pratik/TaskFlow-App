@@ -7,6 +7,7 @@ const publicUserSelect = {
   name: true,
   email: true,
   avatar: true,
+  designation: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -31,7 +32,13 @@ export class UsersService {
   async updateMe(userId: string, dto: UpdateProfileDto) {
     return this.prisma.user.update({
       where: { id: userId },
-      data: dto,
+      data: {
+        ...(dto.name === undefined ? {} : { name: dto.name }),
+        ...(dto.avatar === undefined ? {} : { avatar: dto.avatar }),
+        ...(dto.designation === undefined
+          ? {}
+          : { designation: dto.designation?.trim() || null }),
+      },
       select: publicUserSelect,
     });
   }

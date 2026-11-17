@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CalendarDays, MessageSquare } from "@/components/animated-icons";
 import { IconHover } from "@/components/icon-hover";
 import { Badge } from "@/components/ui/badge";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate } from "@/lib/format";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import type { Task } from "@/types/api";
 
 export function TaskRow({ task }: { task: Task }) {
@@ -47,12 +48,12 @@ export function TaskRow({ task }: { task: Task }) {
           <Badge className="px-2 text-[10px] sm:text-[11px]">{task.status}</Badge>
           <Badge className="px-2 text-[10px] sm:text-[11px]">{task.priority}</Badge>
           {task.assignee ? (
-            <span
-              className="grid size-7 place-items-center rounded-full bg-brand/10 text-[10px] font-semibold text-brand"
+            <UserAvatar
+              className="size-7"
               title={task.assignee.name}
-            >
-              {initials(task.assignee.name)}
-            </span>
+              name={task.assignee.name}
+              avatar={task.assignee.avatar}
+            />
           ) : null}
         </span>
       </Link>

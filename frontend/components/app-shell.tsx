@@ -23,7 +23,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
-import { formatDate, initials } from "@/lib/format";
+import { formatDate } from "@/lib/format";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/app/auth-provider";
 import { useTheme } from "@/app/theme-provider";
 import {
@@ -486,13 +487,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   }
                 }}
               >
-                <span className="grid size-8 place-items-center rounded-full bg-brand/10 text-xs font-semibold text-brand">
-                  {user ? initials(user.name) : "TF"}
-                </span>
+                <UserAvatar
+                  name={user?.name ?? "TaskFlow"}
+                  avatar={user?.avatar ?? null}
+                  className="size-8 text-xs"
+                />
                 <span className="hidden max-w-32 text-left sm:block">
                   <span className="block truncate text-xs font-semibold text-foreground">
                     {user?.name}
                   </span>
+                  {user?.designation ? (
+                    <span className="block truncate text-[10px] text-muted">
+                      {user.designation}
+                    </span>
+                  ) : null}
                   <span className="block truncate text-[10px] text-muted">
                     {user?.email}
                   </span>
