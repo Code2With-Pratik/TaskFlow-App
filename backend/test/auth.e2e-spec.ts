@@ -68,6 +68,12 @@ describe('AuthController (e2e)', () => {
     expect(response.body).not.toHaveProperty('refreshTokenHash');
   });
 
+  it('returns no content when no refresh session is present', async () => {
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .expect(204);
+  });
+
   it('updates and returns the profile designation and avatar', async () => {
     const avatar =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lQsAAAAASUVORK5CYII=';

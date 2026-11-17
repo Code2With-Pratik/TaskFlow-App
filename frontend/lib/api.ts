@@ -45,7 +45,7 @@ export async function refreshSession(): Promise<AuthSession | null> {
         credentials: "include",
       });
 
-      if (response.status === 401) {
+      if (response.status === 204 || response.status === 401) {
         setAccessToken(null);
         return null;
       }

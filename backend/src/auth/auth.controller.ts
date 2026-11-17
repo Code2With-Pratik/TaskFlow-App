@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiCookieAuth,
   ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
@@ -71,13 +72,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiCookieAuth(REFRESH_COOKIE_NAME)
   @ApiOperation({ summary: 'Rotate the refresh token and issue a new access token' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'No refresh session is present.',
+  })
   async refresh(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     const refreshToken = request.cookies?.[REFRESH_COOKIE_NAME];
     if (typeof refreshToken !== 'string') {
-      throw new UnauthorizedException('Refresh token is required');
+      response.status(HttpStatus.NO_CONTENT);
+      return;
     }
 
     const session = await this.authService.refresh(refreshToken);
