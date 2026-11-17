@@ -6,12 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:agent": "node --test lib/agent-content.test.mjs"
   },
   "dependencies": {
     "@animate-ui/react": "^2.4.6",
     "@hookform/resolvers": "^7.0.3",
     "@tanstack/react-query": "^5.106.1",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "motion": "^14.14.0",
