@@ -120,7 +120,7 @@ Add these secrets to the Render API service (never to Vercel or source control):
 | `GITHUB_APP_ID` | GitHub App ID |
 | `GITHUB_APP_SLUG` | App slug from its GitHub URL |
 | `GITHUB_APP_PRIVATE_KEY` | Contents of the App's downloaded private key |
-| `GITHUB_APP_WEBHOOK_SECRET` | The webhook secret configured in the GitHub App |
+| `GITHUB_APP_WEBHOOK_SECRET` | A secret of at least 32 characters, matching the GitHub App webhook secret |
 
 Set all four variables together and redeploy. Until configured, GitHub controls
 remain disabled. Project owners/admins can install the App for a project,

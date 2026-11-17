@@ -8,6 +8,8 @@ const actionIcons: Record<string, typeof Plus> = {
   "task.created": Plus,
   "task.status_updated": CircleCheck,
   "task.comment_added": MessageCircle,
+  "task.comment_replied": MessageCircle,
+  "task.completed_by_github": CircleCheck,
   "project.created": ArrowUpRight,
   "project.updated": RefreshCw,
 };

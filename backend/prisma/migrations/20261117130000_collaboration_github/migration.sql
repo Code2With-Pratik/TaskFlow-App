@@ -14,6 +14,7 @@ CREATE TABLE "ProjectInvitation" (
     "projectId" UUID NOT NULL,
     "inviterId" UUID NOT NULL,
     "inviteeId" UUID NOT NULL,
+    "role" "ProjectRole" NOT NULL DEFAULT 'MEMBER',
     "status" "ProjectInvitationStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "respondedAt" TIMESTAMP(3),

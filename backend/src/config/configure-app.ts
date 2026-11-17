@@ -17,7 +17,9 @@ export function configureApp(
     express.json({
       limit: '2mb',
       verify: (request, _response, buffer) => {
-        Object.assign(request, { rawBody: Buffer.from(buffer) });
+        if (request.url?.startsWith('/integrations/github/webhook')) {
+          Object.assign(request, { rawBody: Buffer.from(buffer) });
+        }
       },
     }),
   );

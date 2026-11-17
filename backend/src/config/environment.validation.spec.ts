@@ -60,6 +60,18 @@ describe('validateEnvironment', () => {
     ).toThrow('must be configured together');
   });
 
+  it('requires a strong GitHub webhook secret when integration is enabled', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        GITHUB_APP_ID: '12345',
+        GITHUB_APP_SLUG: 'taskflow',
+        GITHUB_APP_PRIVATE_KEY: 'private-key',
+        GITHUB_APP_WEBHOOK_SECRET: 'too-short',
+      }),
+    ).toThrow('GITHUB_APP_WEBHOOK_SECRET must be at least 32 characters long');
+  });
+
   it.each([
     ['PORT', '70000'],
     ['FRONTEND_URL', 'not-a-url'],

@@ -124,8 +124,11 @@ export interface GitHubProjectIntegration {
   } | null;
 }
 
-export interface GitHubAvailableRepository extends GitHubRepository {
+export interface GitHubAvailableRepository {
   githubRepoId: string;
+  fullName: string;
+  defaultBranch: string;
+  isPrivate: boolean;
 }
 
 export interface TaskGitHubLink {

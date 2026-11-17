@@ -90,6 +90,13 @@ export function validateEnvironment(environment: Environment): Environment {
   ) {
     errors.push('GITHUB_APP_SLUG must be a valid GitHub App slug');
   }
+  if (
+    configuredGitHubVariables.length === githubVariables.length &&
+    (typeof environment.GITHUB_APP_WEBHOOK_SECRET !== 'string' ||
+      environment.GITHUB_APP_WEBHOOK_SECRET.trim().length < 32)
+  ) {
+    errors.push('GITHUB_APP_WEBHOOK_SECRET must be at least 32 characters long');
+  }
 
   if (errors.length > 0) {
     throw new Error(`Invalid environment configuration: ${errors.join('; ')}`);

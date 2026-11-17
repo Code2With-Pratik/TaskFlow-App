@@ -205,14 +205,7 @@ export class GitHubIntegrationService {
     ]);
     const installation = await this.getActiveInstallation(projectId);
     const token = await this.createInstallationToken(installation.installationId);
-    const repositories: GitHubRepositoryResponse[] = [];
-    for (let page = 1; ; page += 1) {
-      const result = await this.githubRequest<{
-        repositories: GitHubRepositoryResponse[];
-      }>(`/installation/repositories?per_page=100&page=${page}`, { token });
-      repositories.push(...result.repositories);
-      if (result.repositories.length < 100) break;
-    }
+    const repositories = await this.listInstallationRepositories(token);
 
     const selected = new Set(
       (
@@ -243,24 +236,10 @@ export class GitHubIntegrationService {
     ]);
     const installation = await this.getActiveInstallation(projectId);
     const token = await this.createInstallationToken(installation.installationId);
-    const result = await this.githubRequest<{
-      repositories: GitHubRepositoryResponse[];
-    }>('/installation/repositories?per_page=100', { token });
-    let repository = result.repositories.find(
+    const repositories = await this.listInstallationRepositories(token);
+    const repository = repositories.find(
       (item) => item.full_name.toLowerCase() === dto.fullName.trim().toLowerCase(),
     );
-    if (!repository) {
-      for (let page = 2; result.repositories.length === 100; page += 1) {
-        const nextPage = await this.githubRequest<{
-          repositories: GitHubRepositoryResponse[];
-        }>(`/installation/repositories?per_page=100&page=${page}`, { token });
-        repository = nextPage.repositories.find(
-          (item) => item.full_name.toLowerCase() === dto.fullName.trim().toLowerCase(),
-        );
-        if (repository || nextPage.repositories.length < 100) break;
-        result.repositories = nextPage.repositories;
-      }
-    }
     if (!repository) {
       throw new NotFoundException(
         'That repository is not available to the project GitHub App installation',
@@ -600,6 +579,19 @@ export class GitHubIntegrationService {
     if (states.includes('APPROVED')) return 'APPROVED';
     if (states.length === 0) return 'REVIEW_REQUIRED';
     return 'REVIEW_PENDING';
+  }
+
+  private async listInstallationRepositories(
+    token: string,
+  ): Promise<GitHubRepositoryResponse[]> {
+    const repositories: GitHubRepositoryResponse[] = [];
+    for (let page = 1; ; page += 1) {
+      const result = await this.githubRequest<{
+        repositories: GitHubRepositoryResponse[];
+      }>(`/installation/repositories?per_page=100&page=${page}`, { token });
+      repositories.push(...result.repositories);
+      if (result.repositories.length < 100) return repositories;
+    }
   }
 
   private parseWorkUrl(value: string) {

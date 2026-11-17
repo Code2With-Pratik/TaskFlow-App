@@ -65,7 +65,11 @@ export default function NotificationsPage() {
         { method: "POST" },
       ),
     onSuccess: async (result) => {
-      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+        queryClient.invalidateQueries({ queryKey: ["projects"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
       if (result.accepted) router.push(`/projects/${result.projectId}`);
     },
   });
@@ -160,6 +164,11 @@ function NotificationRow({
   const pendingInvitation =
     notification.projectInvitation?.status === "PENDING" &&
     notification.type === "PROJECT_INVITATION";
+  const notificationHref =
+    notification.type !== "PROJECT_INVITATION" ||
+    notification.projectInvitation?.status === "ACCEPTED"
+      ? notification.href
+      : null;
   return (
     <IconHover>
       <article
@@ -173,10 +182,10 @@ function NotificationRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-semibold text-foreground">
-              {notification.href && !pendingInvitation ? (
+              {notificationHref && !pendingInvitation ? (
                 <Link
                   className="hover:text-brand"
-                  href={notification.href}
+                  href={notificationHref}
                   onClick={onMarkRead}
                 >
                   {notification.title}

@@ -172,6 +172,7 @@ model ProjectInvitation {
   projectId     String                  @db.Uuid
   inviterId     String                  @db.Uuid
   inviteeId     String                  @db.Uuid
+  role        ProjectRole             @default(MEMBER)
   status        ProjectInvitationStatus @default(PENDING)
   createdAt     DateTime                @default(now())
   respondedAt   DateTime?

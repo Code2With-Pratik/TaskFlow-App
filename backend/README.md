@@ -103,7 +103,8 @@ notifications for selected project-member mentions. Notifications can link
 directly to the related task or project.
 
 GitHub App support is optional. Configure `GITHUB_APP_ID`, `GITHUB_APP_SLUG`,
-`GITHUB_APP_PRIVATE_KEY`, and `GITHUB_APP_WEBHOOK_SECRET` together to enable
+`GITHUB_APP_PRIVATE_KEY`, and a 32-character-or-longer
+`GITHUB_APP_WEBHOOK_SECRET` together to enable
 project installation, repository selection, issue/pull-request linking, review
 state visibility, and verified pull-request webhooks. Set the GitHub App Setup
 URL to `/integrations/github/callback`, its webhook URL to

@@ -69,7 +69,7 @@ export default function ProjectDetailsPage() {
   const tasksQuery = useQuery({
     queryKey: ["project-tasks", id],
     queryFn: () =>
-      apiFetch<PaginatedTasks>(`/tasks?projectId=${encodeURIComponent(id)}&limit=100`),
+      apiFetch<PaginatedTasks>(`/tasks?projectId=${encodeURIComponent(id)}&limit=8&page=1`),
   });
   const activitiesQuery = useQuery({
     queryKey: ["project-activities", id],
@@ -337,6 +337,7 @@ export default function ProjectDetailsPage() {
               <div>
                 <h2 className="text-sm font-semibold text-foreground">Project tasks</h2>
                 <p className="mt-1 text-xs text-muted">{tasksQuery.data.total} tasks in this project</p>
+                <p className="mt-1 text-xs text-muted">Showing a preview; open the board to browse every task.</p>
               </div>
               <Link href={`/projects/${id}/board`}>
                 <Button size="sm" variant="secondary">View board</Button>

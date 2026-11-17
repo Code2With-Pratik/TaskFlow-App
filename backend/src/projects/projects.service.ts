@@ -161,13 +161,19 @@ export class ProjectsService {
               where: { id: existing.id },
               data: {
                 inviterId: actorId,
+                role: dto.role ?? ProjectRole.MEMBER,
                 status: 'PENDING',
                 createdAt: new Date(),
                 respondedAt: null,
               },
             })
           : await transaction.projectInvitation.create({
-              data: { projectId, inviterId: actorId, inviteeId: user.id },
+              data: {
+                projectId,
+                inviterId: actorId,
+                inviteeId: user.id,
+                role: dto.role ?? ProjectRole.MEMBER,
+              },
             });
 
         if (existing) {
@@ -224,6 +230,7 @@ export class ProjectsService {
         inviteeId: true,
         inviterId: true,
         status: true,
+        role: true,
         project: { select: { name: true } },
       },
     });
@@ -250,7 +257,7 @@ export class ProjectsService {
           data: {
             projectId: invitation.projectId,
             userId,
-            role: ProjectRole.MEMBER,
+            role: invitation.role,
           },
         });
       }

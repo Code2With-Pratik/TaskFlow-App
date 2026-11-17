@@ -170,6 +170,12 @@ export function GitHubIntegrationPanel({
                 </Button>
               </form>
             ) : null}
+            {canManage && !availableRepositoriesQuery.isLoading &&
+            availableRepositoriesQuery.data?.length === 0 ? (
+              <p className="text-xs text-muted">
+                All repositories available to this installation are connected.
+              </p>
+            ) : null}
             {canManage ? (
               <label className="flex items-start gap-2 border-t border-border pt-3 text-xs leading-5 text-muted">
                 <input
