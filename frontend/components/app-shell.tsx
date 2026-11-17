@@ -292,6 +292,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
+              className={theme === "light" ? "text-black hover:text-black" : "text-white hover:text-white"}
               size="icon"
               variant="ghost"
               aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
