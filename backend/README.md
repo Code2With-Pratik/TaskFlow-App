@@ -61,8 +61,9 @@ The public `GET /health` endpoint returns `{ "status": "ok", "timestamp":
   token and a safe user profile. The refresh token is only set in an
   HttpOnly cookie scoped to `/auth` (`SameSite=Lax` locally and
   `SameSite=None; Secure` in production for cross-site Vercel/Render requests).
-- `POST /auth/refresh` verifies the refresh token, atomically rotates its
-  stored SHA-256 hash, and rejects reused tokens.
+- `POST /auth/refresh` verifies the refresh token and atomically rotates its
+  stored SHA-256 hash. It returns `204 No Content` when no refresh cookie is
+  present, and rejects invalid or reused tokens.
 - `POST /auth/logout` revokes the active refresh token and clears its cookie.
 - `GET /auth/me` requires an `Authorization: Bearer <access-token>` header.
 
