@@ -111,10 +111,13 @@ URL to `https://<your-api-service>/integrations/github/callback` and enable
 **Redirect on update** so GitHub returns to TaskFlow after repository access is
 saved for an existing installation. Set its webhook URL to
 `https://<your-api-service>/integrations/github/webhook`, and subscribe to
-`installation`, `pull_request`, and `pull_request_review`. Repository metadata,
-issues, and pull requests require read-only permissions. Project owners/admins
-connect an installation and select repositories; project members can link work
-to tasks. Automatic task completion on PR merge is opt-in per project.
+`installation`, `pull_request`, `pull_request_review`, and `check_suite`.
+Repository metadata, issues, pull requests, and checks require read-only
+permissions. Project members can browse open repository issues, create project
+tasks from issues, and link work to tasks. A PR links automatically when its
+title or branch includes `taskflow:<task-id>`, or when it closes an issue
+already linked to a task. Automatic task completion on PR merge is opt-in per
+project.
 
 ## NestJS concepts in this backend
 

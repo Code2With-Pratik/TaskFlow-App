@@ -99,6 +99,9 @@ export function TaskGitHubLinks({ taskId }: { taskId: string }) {
                   <Badge>{link.type === "PULL_REQUEST" ? "Pull request" : "Issue"}</Badge>
                   <Badge>{link.state.toLowerCase()}</Badge>
                   {link.isDraft ? <Badge>Draft</Badge> : null}
+                  {link.checkStatus ? (
+                    <Badge>Checks {link.checkStatus.toLowerCase().replaceAll("_", " ")}</Badge>
+                  ) : null}
                   {link.reviewState ? (
                     <Badge>{link.reviewState.replaceAll("_", " ").toLowerCase()}</Badge>
                   ) : null}
@@ -111,6 +114,13 @@ export function TaskGitHubLinks({ taskId }: { taskId: string }) {
             Link a GitHub issue or pull request to keep implementation and review status with this task.
           </p>
         )}
+        <p className="text-[11px] leading-5 text-muted">
+          Auto-link a pull request by including{" "}
+          <code className="break-all rounded bg-surface-secondary px-1 text-foreground">
+            taskflow:{taskId}
+          </code>{" "}
+          in its title or branch, or have it close an issue linked to this task.
+        </p>
         <form
           className="flex gap-2"
           onSubmit={(event) => {

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { GitHubIssuesBrowser } from "@/components/github-issues-browser";
 import { apiFetch, getErrorMessage } from "@/lib/api";
 import type {
   GitHubAvailableRepository,
@@ -217,6 +218,10 @@ export function GitHubIntegrationPanel({
                 Move linked tasks to Done when a pull request is merged
               </label>
             ) : null}
+            <GitHubIssuesBrowser
+              projectId={projectId}
+              repositories={integration.installation.repositories}
+            />
           </>
         )}
         <ConfirmDialog

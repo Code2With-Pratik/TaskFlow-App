@@ -14,6 +14,8 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import {
   GitHubWorkType,
+  NotificationType,
+  Prisma,
   ProjectRole,
   TaskStatus,
 } from '../generated/prisma/client.js';
@@ -22,7 +24,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ProjectAccessService } from '../projects/project-access.service.js';
 import type { AddGitHubRepositoryDto } from './dto/add-github-repository.dto.js';
 import type { AddTaskGitHubLinkDto } from './dto/add-task-github-link.dto.js';
+import type { BrowseGitHubIssuesDto } from './dto/browse-github-issues.dto.js';
 import type { UpdateGitHubSettingsDto } from './dto/update-github-settings.dto.js';
+import { parseGitHubWorkReferences } from './github-reference.js';
 
 const GITHUB_API = 'https://api.github.com';
 
@@ -38,11 +42,36 @@ interface GitHubRepositoryResponse {
   private: boolean;
 }
 
+interface GitHubIssueResponse {
+  number: number;
+  html_url: string;
+  title: string;
+  body: string | null;
+  state: string;
+  updated_at: string;
+  pull_request?: unknown;
+}
+
+interface GitHubIssueSearchResponse {
+  total_count: number;
+  items: GitHubIssueResponse[];
+}
+
+interface GitHubCheckSuiteResponse {
+  total_count: number;
+  check_suites: Array<{
+    status: string;
+    conclusion: string | null;
+  }>;
+}
+
 interface GitHubWorkResponse {
   number: number;
   html_url: string;
   title: string;
+  body?: string | null;
   state: string;
+  head?: { ref: string };
   draft?: boolean;
   merged?: boolean;
   merged_at?: string | null;
@@ -235,6 +264,183 @@ export class GitHubIntegrationService {
         defaultBranch: repository.default_branch,
         isPrivate: repository.private,
       }));
+  }
+
+  async browseIssues(
+    projectId: string,
+    userId: string,
+    query: BrowseGitHubIssuesDto,
+  ) {
+    await this.projectAccess.requireMembership(projectId, userId);
+    const repository = await this.prisma.gitHubRepository.findFirst({
+      where: {
+        id: query.repositoryId,
+        installation: { projectId, isActive: true },
+      },
+      select: {
+        id: true,
+        fullName: true,
+        installation: { select: { installationId: true } },
+      },
+    });
+    if (!repository) {
+      throw new NotFoundException('Connected GitHub repository was not found');
+    }
+
+    const [, repoName] = repository.fullName.split('/');
+    const token = await this.createInstallationToken(
+      repository.installation.installationId,
+      repoName,
+    );
+    const terms = [
+      `repo:${repository.fullName}`,
+      'is:issue',
+      'state:open',
+      ...(query.search?.trim()
+        ? [`"${query.search.trim().replaceAll('"', '').replaceAll('\\', '')}"`]
+        : []),
+    ];
+    const response = await this.githubRequest<GitHubIssueSearchResponse>(
+      `/search/issues?q=${encodeURIComponent(terms.join(' '))}&per_page=30&page=${query.page}`,
+      { token },
+    );
+    const issues = response.items.filter(
+      (issue) =>
+        !issue.pull_request &&
+        issue.html_url
+          .toLowerCase()
+          .startsWith(`https://github.com/${repository.fullName}/issues/`.toLowerCase()),
+    );
+    const linked = await this.prisma.taskGitHubLink.findMany({
+      where: {
+        repositoryId: repository.id,
+        type: GitHubWorkType.ISSUE,
+        number: { in: issues.map(({ number }) => number) },
+      },
+      select: {
+        number: true,
+        task: { select: { id: true, title: true } },
+      },
+    });
+    const linkedByNumber = new Map(
+      linked.map(({ number, task }) => [number, task]),
+    );
+
+    return {
+      totalCount: response.total_count,
+      page: query.page,
+      issues: issues.map((issue) => ({
+        number: issue.number,
+        title: issue.title,
+        body: issue.body,
+        state: issue.state,
+        url: issue.html_url,
+        updatedAt: issue.updated_at,
+        linkedTask: linkedByNumber.get(issue.number) ?? null,
+      })),
+    };
+  }
+
+  async createTaskFromIssue(
+    projectId: string,
+    userId: string,
+    repositoryId: string,
+    number: number,
+  ) {
+    if (!Number.isSafeInteger(number) || number < 1) {
+      throw new BadRequestException('GitHub issue number is invalid');
+    }
+    await this.projectAccess.requireMembership(projectId, userId);
+    const repository = await this.prisma.gitHubRepository.findFirst({
+      where: {
+        id: repositoryId,
+        installation: { projectId, isActive: true },
+      },
+      select: {
+        id: true,
+        fullName: true,
+        installation: { select: { installationId: true } },
+      },
+    });
+    if (!repository) {
+      throw new NotFoundException('Connected GitHub repository was not found');
+    }
+    const existing = await this.prisma.taskGitHubLink.findUnique({
+      where: {
+        repositoryId_number_type: {
+          repositoryId,
+          number,
+          type: GitHubWorkType.ISSUE,
+        },
+      },
+      select: { taskId: true, task: { select: { title: true } } },
+    });
+    if (existing) {
+      throw new ConflictException(
+        `This issue is already linked to task "${existing.task.title}"`,
+      );
+    }
+
+    const [, repoName] = repository.fullName.split('/');
+    const token = await this.createInstallationToken(
+      repository.installation.installationId,
+      repoName,
+    );
+    const [owner] = repository.fullName.split('/');
+    const issue = await this.githubRequest<GitHubIssueResponse>(
+      `/repos/${owner}/${repoName}/issues/${number}`,
+      { token },
+    );
+    if (issue.pull_request) {
+      throw new BadRequestException('Select a GitHub issue, not a pull request');
+    }
+
+    try {
+      return await this.prisma.$transaction(async (transaction) => {
+        const task = await transaction.task.create({
+          data: {
+            projectId,
+            createdById: userId,
+            title: issue.title.slice(0, 200),
+            description: issue.body?.slice(0, 5000) ?? null,
+            status: TaskStatus.TODO,
+            priority: 'MEDIUM',
+          },
+          select: { id: true, title: true, projectId: true },
+        });
+        await transaction.taskGitHubLink.create({
+          data: {
+            taskId: task.id,
+            repositoryId: repository.id,
+            addedById: userId,
+            number: issue.number,
+            type: GitHubWorkType.ISSUE,
+            url: issue.html_url,
+            title: issue.title,
+            state: issue.state.toUpperCase(),
+          },
+        });
+        await transaction.activity.create({
+          data: {
+            action: 'task.created',
+            description: `Created task "${task.title}" from GitHub issue #${number}`,
+            projectId,
+            userId,
+          },
+        });
+        return task;
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'This GitHub issue has already been added to the project',
+        );
+      }
+      throw error;
+    }
   }
 
   async addRepository(
@@ -456,29 +662,96 @@ export class GitHubIntegrationService {
       return;
     }
 
-    if (event !== 'pull_request' && event !== 'pull_request_review') return;
     const installation = this.asRecord(payload.installation);
     const repository = this.asRecord(payload.repository);
-    const pullRequest = this.asRecord(payload.pull_request);
     if (
       typeof installation?.id !== 'number' ||
-      typeof repository?.full_name !== 'string' ||
-      typeof pullRequest?.number !== 'number'
+      typeof repository?.full_name !== 'string'
     ) {
       return;
     }
-    await this.syncPullRequest(
-      installation.id,
-      repository.full_name,
-      pullRequest.number,
-    );
+    const action = typeof payload.action === 'string' ? payload.action : '';
+    if (event === 'pull_request' || event === 'pull_request_review') {
+      const pullRequest = this.asRecord(payload.pull_request);
+      if (typeof pullRequest?.number !== 'number') return;
+      await this.syncPullRequest(
+        installation.id,
+        repository.full_name,
+        pullRequest.number,
+        event === 'pull_request' &&
+          (action === 'opened' || action === 'reopened'),
+      );
+      if (event === 'pull_request' && action === 'review_requested') {
+        await this.notifyPullRequestTasks(
+          installation.id,
+          repository.full_name,
+          pullRequest.number,
+          NotificationType.GITHUB_REVIEW_REQUESTED,
+          'Review requested',
+          `A review was requested for pull request #${pullRequest.number}.`,
+        );
+      }
+      return;
+    }
+
+    if (event === 'check_suite' && action === 'completed') {
+      const suite = this.asRecord(payload.check_suite);
+      const pullRequests = Array.isArray(suite?.pull_requests)
+        ? suite.pull_requests
+        : [];
+      for (const candidate of pullRequests) {
+        const pullRequest = this.asRecord(candidate);
+        if (typeof pullRequest?.number !== 'number') continue;
+        await this.syncPullRequest(
+          installation.id,
+          repository.full_name,
+          pullRequest.number,
+        );
+        await this.syncCheckSuite(
+          installation.id,
+          repository.full_name,
+          pullRequest.number,
+          typeof suite?.head_sha === 'string' ? suite.head_sha : null,
+        );
+      }
+    }
   }
 
   private async syncPullRequest(
     installationId: number,
     fullName: string,
     number: number,
+    startWork = false,
   ): Promise<void> {
+    const repositories = await this.prisma.gitHubRepository.findMany({
+      where: {
+        fullName: { equals: fullName, mode: 'insensitive' },
+        installation: { installationId, isActive: true },
+      },
+      select: {
+        id: true,
+        installation: { select: { projectId: true, installationId: true } },
+      },
+    });
+    if (!repositories.length) return;
+
+    const [owner, repo] = fullName.split('/');
+    const token = await this.createInstallationToken(installationId, repo);
+    const work = await this.githubRequest<GitHubWorkResponse>(
+      `/repos/${owner}/${repo}/pulls/${number}`,
+      { token },
+    );
+    const reviewState = await this.getReviewState(token, fullName, number);
+    const mergedAt = work.merged_at ? new Date(work.merged_at) : null;
+
+    await this.autoLinkPullRequest(
+      repositories,
+      fullName,
+      work,
+      reviewState,
+      mergedAt,
+    );
+
     const links = await this.prisma.taskGitHubLink.findMany({
       where: {
         number,
@@ -503,20 +776,6 @@ export class GitHubIntegrationService {
         },
       },
     });
-    if (!links.length) return;
-
-    const repositoryPath = links[0].repository.fullName;
-    const token = await this.createInstallationToken(
-      installationId,
-      repositoryPath.split('/')[1],
-    );
-    const [owner, repo] = repositoryPath.split('/');
-    const work = await this.githubRequest<GitHubWorkResponse>(
-      `/repos/${owner}/${repo}/pulls/${number}`,
-      { token },
-    );
-    const reviewState = await this.getReviewState(token, repositoryPath, number);
-    const mergedAt = work.merged_at ? new Date(work.merged_at) : null;
 
     for (const link of links) {
       await this.prisma.taskGitHubLink.update({
@@ -530,6 +789,21 @@ export class GitHubIntegrationService {
           syncedAt: new Date(),
         },
       });
+      if (
+        startWork &&
+        link.task.status !== TaskStatus.IN_PROGRESS &&
+        link.task.status !== TaskStatus.DONE
+      ) {
+        await this.updateTaskStatusFromGitHub(
+          link.task.id,
+          link.task.title,
+          link.task.projectId,
+          link.task.createdById,
+          link.task.assignees.map(({ userId }) => userId),
+          TaskStatus.IN_PROGRESS,
+          `Moved "${link.task.title}" to In progress because GitHub pull request #${number} was opened`,
+        );
+      }
       if (!work.merged || !link.task.project.autoCompleteOnMerge) continue;
 
       const update = await this.prisma.$transaction(async (transaction) => {
@@ -564,6 +838,247 @@ export class GitHubIntegrationService {
       for (const recipientId of update) {
         this.notificationsGateway.emitNewNotification(recipientId);
       }
+    }
+  }
+
+  private async autoLinkPullRequest(
+    repositories: Array<{
+      id: string;
+      installation: { projectId: string; installationId: number };
+    }>,
+    fullName: string,
+    work: GitHubWorkResponse,
+    reviewState: string,
+    mergedAt: Date | null,
+  ): Promise<void> {
+    const repositoryIdByProject = new Map(
+      repositories.map(({ id, installation }) => [installation.projectId, id]),
+    );
+    const { taskIds, closingIssueNumbers } = parseGitHubWorkReferences(
+      work.title,
+      work.head?.ref ?? '',
+      work.body ?? '',
+    );
+
+    const candidates = new Map<string, { projectId: string; createdById: string }>();
+    if (taskIds.size) {
+      const tasks = await this.prisma.task.findMany({
+        where: {
+          id: { in: Array.from(taskIds) },
+          projectId: { in: Array.from(repositoryIdByProject.keys()) },
+        },
+        select: { id: true, projectId: true, createdById: true },
+      });
+      for (const task of tasks) candidates.set(task.id, task);
+    }
+    if (closingIssueNumbers.size) {
+      const issueLinks = await this.prisma.taskGitHubLink.findMany({
+        where: {
+          number: { in: Array.from(closingIssueNumbers) },
+          type: GitHubWorkType.ISSUE,
+          repository: {
+            fullName: { equals: fullName, mode: 'insensitive' },
+            installation: { installationId: repositories[0].installation.installationId, isActive: true },
+          },
+        },
+        select: {
+          task: { select: { id: true, projectId: true, createdById: true } },
+        },
+      });
+      for (const { task } of issueLinks) {
+        if (repositoryIdByProject.has(task.projectId)) {
+          candidates.set(task.id, task);
+        }
+      }
+    }
+
+    for (const [taskId, task] of candidates) {
+      const repositoryId = repositoryIdByProject.get(task.projectId);
+      if (!repositoryId) continue;
+      await this.prisma.taskGitHubLink.upsert({
+        where: {
+          repositoryId_number_type: {
+            repositoryId,
+            number: work.number,
+            type: GitHubWorkType.PULL_REQUEST,
+          },
+        },
+        create: {
+          taskId,
+          repositoryId,
+          addedById: task.createdById,
+          number: work.number,
+          type: GitHubWorkType.PULL_REQUEST,
+          url: work.html_url,
+          title: work.title,
+          state: work.merged ? 'MERGED' : work.state.toUpperCase(),
+          isDraft: work.draft ?? false,
+          reviewState,
+          mergedAt,
+        },
+        update: {
+          title: work.title,
+          state: work.merged ? 'MERGED' : work.state.toUpperCase(),
+          isDraft: work.draft ?? false,
+          reviewState,
+          mergedAt,
+          syncedAt: new Date(),
+        },
+      });
+    }
+  }
+
+  private async syncCheckSuite(
+    installationId: number,
+    fullName: string,
+    pullRequestNumber: number,
+    headSha: string | null,
+  ): Promise<void> {
+    if (!headSha) return;
+    const [owner, repo] = fullName.split('/');
+    const token = await this.createInstallationToken(installationId, repo);
+    const response = await this.githubRequest<GitHubCheckSuiteResponse>(
+      `/repos/${owner}/${repo}/commits/${encodeURIComponent(headSha)}/check-suites?per_page=100`,
+      { token },
+    );
+    if (response.check_suites.length === 0) return;
+    const failedConclusions = new Set([
+      'failure',
+      'timed_out',
+      'cancelled',
+      'action_required',
+      'startup_failure',
+    ]);
+    const status = response.check_suites.some(
+      (suite) =>
+        suite.conclusion !== null &&
+        failedConclusions.has(suite.conclusion.toLowerCase()),
+    )
+      ? 'FAILURE'
+      : response.check_suites.some((suite) => suite.status !== 'completed')
+        ? 'IN_PROGRESS'
+        : response.check_suites.some((suite) => suite.conclusion === null)
+          ? 'IN_PROGRESS'
+          : 'SUCCESS';
+    const links = await this.prisma.taskGitHubLink.findMany({
+      where: {
+        number: pullRequestNumber,
+        type: GitHubWorkType.PULL_REQUEST,
+        repository: {
+          fullName: { equals: fullName, mode: 'insensitive' },
+          installation: { installationId, isActive: true },
+        },
+      },
+      select: { id: true, checkStatus: true, taskId: true },
+    });
+    if (!links.length) return;
+    await this.prisma.taskGitHubLink.updateMany({
+      where: { id: { in: links.map(({ id }) => id) } },
+      data: { checkStatus: status },
+    });
+    if (status !== 'FAILURE') return;
+    for (const link of links.filter(({ checkStatus }) => checkStatus !== status)) {
+      await this.notifyTaskMembers(
+        link.taskId,
+        NotificationType.GITHUB_CHECK_FAILED,
+        'GitHub checks failed',
+        `Checks failed for pull request #${pullRequestNumber} in ${fullName}.`,
+      );
+    }
+  }
+
+  private async notifyPullRequestTasks(
+    installationId: number,
+    fullName: string,
+    number: number,
+    type: NotificationType,
+    title: string,
+    message: string,
+  ): Promise<void> {
+    const links = await this.prisma.taskGitHubLink.findMany({
+      where: {
+        number,
+        type: GitHubWorkType.PULL_REQUEST,
+        repository: {
+          fullName: { equals: fullName, mode: 'insensitive' },
+          installation: { installationId, isActive: true },
+        },
+      },
+      select: { taskId: true },
+    });
+    for (const { taskId } of links) {
+      await this.notifyTaskMembers(taskId, type, title, message);
+    }
+  }
+
+  private async notifyTaskMembers(
+    taskId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+  ): Promise<void> {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        createdById: true,
+        assignees: { select: { userId: true } },
+      },
+    });
+    if (!task) return;
+    const recipients = new Set([
+      task.createdById,
+      ...task.assignees.map(({ userId }) => userId),
+    ]);
+    await this.prisma.notification.createMany({
+      data: Array.from(recipients, (userId) => ({
+        title,
+        message,
+        type,
+        userId,
+        href: `/tasks/${task.id}`,
+      })),
+    });
+    for (const recipientId of recipients) {
+      this.notificationsGateway.emitNewNotification(recipientId);
+    }
+  }
+
+  private async updateTaskStatusFromGitHub(
+    taskId: string,
+    title: string,
+    projectId: string,
+    actorId: string,
+    assigneeIds: string[],
+    status: TaskStatus,
+    description: string,
+  ): Promise<void> {
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const update = await transaction.task.updateMany({
+        where: {
+          id: taskId,
+          status: { notIn: [TaskStatus.IN_PROGRESS, TaskStatus.DONE] },
+        },
+        data: { status },
+      });
+      if (!update.count) return [];
+      await transaction.activity.create({
+        data: { action: 'task.status_updated', description, projectId, userId: actorId },
+      });
+      const recipients = new Set([actorId, ...assigneeIds]);
+      await transaction.notification.createMany({
+        data: Array.from(recipients, (userId) => ({
+          title: 'Task moved to In progress',
+          message: `"${title}" moved to In progress after a pull request was opened.`,
+          type: NotificationType.TASK_STATUS_UPDATED,
+          userId,
+          href: `/tasks/${taskId}`,
+        })),
+      });
+      return Array.from(recipients);
+    });
+    for (const recipientId of result) {
+      this.notificationsGateway.emitNewNotification(recipientId);
     }
   }
 

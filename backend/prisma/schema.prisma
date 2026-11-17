@@ -16,6 +16,7 @@ enum ProjectRole {
 enum TaskStatus {
   TODO
   IN_PROGRESS
+  BLOCKED
   DONE
 }
 
@@ -33,6 +34,9 @@ enum NotificationType {
   PROJECT_INVITATION
   TASK_DUE_SOON
   TASK_OVERDUE
+  TASK_BLOCKED
+  GITHUB_REVIEW_REQUESTED
+  GITHUB_CHECK_FAILED
   GITHUB_PULL_REQUEST_MERGED
 }
 
@@ -226,6 +230,7 @@ model TaskGitHubLink {
   state        String
   isDraft      Boolean          @default(false)
   reviewState  String?
+  checkStatus  String?
   mergedAt     DateTime?
   syncedAt     DateTime         @default(now())
   task         Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)

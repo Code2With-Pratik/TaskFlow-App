@@ -254,7 +254,7 @@ export class TasksService {
       const notifications: Array<{
         title: string;
         message: string;
-        type: 'TASK_ASSIGNED' | 'TASK_STATUS_UPDATED';
+        type: 'TASK_ASSIGNED' | 'TASK_STATUS_UPDATED' | 'TASK_BLOCKED';
         userId: string;
         href: string;
       }> = [];
@@ -283,10 +283,13 @@ export class TasksService {
             .filter((recipientId) => recipientId !== userId),
         );
         for (const recipientId of recipients) {
+          const isBlocked = dto.status === 'BLOCKED';
           notifications.push({
-            title: 'Task status updated',
-            message: `"${task.title}" is now ${task.status.replace('_', ' ').toLowerCase()}.`,
-            type: 'TASK_STATUS_UPDATED',
+            title: isBlocked ? 'Task blocked' : 'Task status updated',
+            message: isBlocked
+              ? `"${task.title}" was marked as blocked.`
+              : `"${task.title}" is now ${task.status.replace('_', ' ').toLowerCase()}.`,
+            type: isBlocked ? 'TASK_BLOCKED' : 'TASK_STATUS_UPDATED',
             userId: recipientId,
             href: `/tasks/${task.id}`,
           });

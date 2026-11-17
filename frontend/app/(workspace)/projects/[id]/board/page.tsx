@@ -31,6 +31,7 @@ import type { PaginatedTasks, Project, ProjectMember, Task, TaskPriority, TaskSt
 const columns: Array<{ status: TaskStatus; label: string; tone: string }> = [
   { status: "TODO", label: "To do", tone: "bg-danger" },
   { status: "IN_PROGRESS", label: "In progress", tone: "bg-warning" },
+  { status: "BLOCKED", label: "Blocked", tone: "bg-danger" },
   { status: "DONE", label: "Done", tone: "bg-success" },
 ];
 const taskPageSize = 50;
@@ -76,10 +77,12 @@ export default function ProjectBoardPage() {
   });
   const todoTasksQuery = useColumnTasks(id, "TODO");
   const inProgressTasksQuery = useColumnTasks(id, "IN_PROGRESS");
+  const blockedTasksQuery = useColumnTasks(id, "BLOCKED");
   const doneTasksQuery = useColumnTasks(id, "DONE");
   const taskQueries = [
     todoTasksQuery,
     inProgressTasksQuery,
+    blockedTasksQuery,
     doneTasksQuery,
   ];
   const membersQuery = useQuery({

@@ -10,6 +10,7 @@ import {
   FolderKanban,
   ListTodo,
   Plus,
+  TriangleAlert,
 } from "@/components/animated-icons";
 import { useQuery } from "@tanstack/react-query";
 import { ActivityRow } from "@/components/activity-row";
@@ -17,6 +18,7 @@ import { ErrorState, LoadingState } from "@/components/query-state";
 import { IconHover } from "@/components/icon-hover";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeading } from "@/components/ui/page-heading";
 import { apiFetch } from "@/lib/api";
@@ -51,6 +53,13 @@ const statCards = [
     href: "/tasks?status=OVERDUE",
     icon: CalendarClock,
     iconClass: "bg-warning/10 text-warning",
+  },
+  {
+    key: "blockedTasks",
+    label: "Blocked",
+    href: "/tasks?status=BLOCKED",
+    icon: TriangleAlert,
+    iconClass: "bg-danger/10 text-danger-foreground",
   },
 ] as const;
 
@@ -102,7 +111,7 @@ export default function DashboardPage() {
 
       <section
         aria-label="Workspace statistics"
-        className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-5 xl:gap-4"
       >
         {statCards.map(({ key, label, href, icon: Icon, iconClass }) => (
           <Link
@@ -145,6 +154,115 @@ export default function DashboardPage() {
             </Card>
           </Link>
         ))}
+      </section>
+
+      <section
+        aria-label="Developer daily work"
+        className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+      >
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-semibold text-foreground">My tasks</h2>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-1">
+            {data.developerWork.myTasks.length ? (
+              data.developerWork.myTasks.map((task) => (
+                <Link
+                  className="block rounded-lg hover:bg-surface-secondary"
+                  href={`/tasks/${task.id}`}
+                  key={task.id}
+                >
+                  <span className="block truncate text-xs font-medium text-foreground">{task.title}</span>
+                  <span className="mt-1 flex items-center justify-between gap-2 text-[10px] text-muted">
+                    <span className="truncate">{task.project.name}</span>
+                    <Badge>{task.status}</Badge>
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <p className="text-xs text-muted">No open tasks assigned to you.</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-semibold text-foreground">Blocked work</h2>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-1">
+            {data.developerWork.blockedTasks.length ? (
+              data.developerWork.blockedTasks.map((task) => (
+                <Link
+                  className="block rounded-lg hover:bg-surface-secondary"
+                  href={`/tasks/${task.id}`}
+                  key={task.id}
+                >
+                  <span className="block truncate text-xs font-medium text-foreground">{task.title}</span>
+                  <span className="mt-1 block truncate text-[10px] text-muted">{task.project.name}</span>
+                </Link>
+              ))
+            ) : (
+              <p className="text-xs text-muted">No blocked tasks in your projects.</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-semibold text-foreground">Pull requests to review</h2>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-1">
+            {data.developerWork.reviewPullRequests.length ? (
+              data.developerWork.reviewPullRequests.map((pullRequest) => (
+                <div className="min-w-0" key={`${pullRequest.repository}-${pullRequest.number}-${pullRequest.taskId}`}>
+                  <Link
+                    className="block truncate text-xs font-medium text-foreground hover:underline"
+                    href={`/tasks/${pullRequest.taskId}`}
+                  >
+                    {pullRequest.taskTitle}
+                  </Link>
+                  <a
+                    className="mt-1 block truncate text-[10px] text-muted hover:underline"
+                    href={pullRequest.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {pullRequest.repository} #{pullRequest.number} · {pullRequest.reviewState?.replaceAll("_", " ").toLowerCase()}
+                  </a>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-muted">No linked pull requests are waiting for review.</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-semibold text-foreground">Recently merged</h2>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-1">
+            {data.developerWork.recentlyMerged.length ? (
+              data.developerWork.recentlyMerged.map((pullRequest) => (
+                <div className="min-w-0" key={`${pullRequest.repository}-${pullRequest.number}-${pullRequest.taskId}`}>
+                  <Link
+                    className="block truncate text-xs font-medium text-foreground hover:underline"
+                    href={`/tasks/${pullRequest.taskId}`}
+                  >
+                    {pullRequest.taskTitle}
+                  </Link>
+                  <a
+                    className="mt-1 block truncate text-[10px] text-muted hover:underline"
+                    href={pullRequest.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {pullRequest.repository} #{pullRequest.number} · {formatDate(pullRequest.mergedAt)}
+                  </a>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-muted">Merged pull requests from the last 7 days appear here.</p>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">

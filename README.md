@@ -115,8 +115,9 @@ its Setup URL to
 **Redirect on update** so GitHub returns to TaskFlow after repository access is
 saved for an existing installation. Set its webhook URL to
 `https://<your-api-service>.onrender.com/integrations/github/webhook`.
-Subscribe to `installation`, `pull_request`, and `pull_request_review` events.
-Grant read-only repository metadata, issues, and pull requests permissions.
+Subscribe to `installation`, `pull_request`, `pull_request_review`, and
+`check_suite` events. Grant read-only repository metadata, issues, pull
+requests, and checks permissions.
 
 Add these secrets to the Render API service (never to Vercel or source control):
 
@@ -129,11 +130,16 @@ Add these secrets to the Render API service (never to Vercel or source control):
 
 Set all four variables together and redeploy. Until configured, GitHub controls
 remain disabled. Project owners/admins can install the App for a project,
-select repositories, and link issues or pull requests to tasks. Owners/admins
-can also disconnect GitHub from a project; this pauses syncing but keeps
-existing task links visible and does not uninstall the GitHub App. Pull-request
-state and review summaries update through verified GitHub webhooks. Projects
-may opt into moving linked tasks to Done when a PR is merged.
+select repositories, browse/search open issues, and add an issue as a project
+task. Pull requests link automatically when their title or branch includes
+`taskflow:<task-id>` or when they close an issue already linked to a task.
+TaskFlow shows pull-request review and check status, moves tasks to In progress
+when a linked pull request opens, and sends notifications for review requests,
+failed checks, and blocked tasks. The dashboard includes assigned and blocked
+work, pull requests awaiting review, and recent merges. Owners/admins can also
+disconnect GitHub from a project; this pauses syncing but keeps existing task
+links visible and does not uninstall the GitHub App. Projects may opt into
+moving linked tasks to Done when a PR is merged.
 
 Project invitations are in-app only: invited collaborators must already have
 a TaskFlow account, and they join after accepting the invitation from their

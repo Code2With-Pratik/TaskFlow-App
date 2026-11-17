@@ -48,6 +48,9 @@ const notificationIcons: Record<NotificationType, AnimatedIcon> = {
   PROJECT_INVITATION: FolderPlus,
   TASK_DUE_SOON: Clock3,
   TASK_OVERDUE: TriangleAlert,
+  TASK_BLOCKED: TriangleAlert,
+  GITHUB_REVIEW_REQUESTED: Bell,
+  GITHUB_CHECK_FAILED: TriangleAlert,
   GITHUB_PULL_REQUEST_MERGED: Check,
 };
 

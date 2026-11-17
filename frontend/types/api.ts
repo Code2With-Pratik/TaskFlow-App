@@ -1,5 +1,5 @@
 export type ProjectRole = "OWNER" | "ADMIN" | "MEMBER";
-export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 export type NotificationType =
   | "TASK_ASSIGNED"
@@ -9,6 +9,9 @@ export type NotificationType =
   | "PROJECT_INVITATION"
   | "TASK_DUE_SOON"
   | "TASK_OVERDUE"
+  | "TASK_BLOCKED"
+  | "GITHUB_REVIEW_REQUESTED"
+  | "GITHUB_CHECK_FAILED"
   | "GITHUB_PULL_REQUEST_MERGED";
 
 export interface User {
@@ -131,6 +134,20 @@ export interface GitHubAvailableRepository {
   isPrivate: boolean;
 }
 
+export interface GitHubIssueSearchResult {
+  totalCount: number;
+  page: number;
+  issues: Array<{
+    number: number;
+    title: string;
+    body: string | null;
+    state: string;
+    url: string;
+    updatedAt: string;
+    linkedTask: { id: string; title: string } | null;
+  }>;
+}
+
 export interface TaskGitHubLink {
   id: string;
   number: number;
@@ -140,6 +157,7 @@ export interface TaskGitHubLink {
   state: string;
   isDraft: boolean;
   reviewState: string | null;
+  checkStatus: string | null;
   mergedAt: string | null;
   syncedAt: string;
   repository: Pick<GitHubRepository, "fullName">;
@@ -157,7 +175,38 @@ export interface DashboardSummary {
     completedTasks: number;
     pendingTasks: number;
     inProgressTasks: number;
+    blockedTasks: number;
     overdueTasks: number;
+  };
+  developerWork: {
+    myTasks: Array<Pick<Task, "id" | "title" | "status" | "priority" | "dueDate"> & {
+      project: Pick<Project, "id" | "name">;
+    }>;
+    blockedTasks: Array<Pick<Task, "id" | "title" | "priority" | "dueDate"> & {
+      project: Pick<Project, "id" | "name">;
+    }>;
+    reviewPullRequests: Array<{
+      taskId: string;
+      taskTitle: string;
+      projectId: string;
+      projectName: string;
+      repository: string;
+      number: number;
+      title: string;
+      url: string;
+      reviewState: string | null;
+    }>;
+    recentlyMerged: Array<{
+      taskId: string;
+      taskTitle: string;
+      projectId: string;
+      projectName: string;
+      repository: string;
+      number: number;
+      title: string;
+      url: string;
+      mergedAt: string;
+    }>;
   };
   recentActivities: Activity[];
   upcomingDeadlines: Array<

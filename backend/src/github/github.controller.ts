@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface.js';
 import { AddGitHubRepositoryDto } from './dto/add-github-repository.dto.js';
 import { AddTaskGitHubLinkDto } from './dto/add-task-github-link.dto.js';
+import { BrowseGitHubIssuesDto } from './dto/browse-github-issues.dto.js';
 import { UpdateGitHubSettingsDto } from './dto/update-github-settings.dto.js';
 import { GitHubIntegrationService } from './github-integration.service.js';
 
@@ -61,6 +63,30 @@ export class GitHubProjectController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.github.listAvailableRepositories(projectId, user.id);
+  }
+
+  @Get('issues')
+  browseIssues(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: BrowseGitHubIssuesDto,
+  ) {
+    return this.github.browseIssues(projectId, user.id, query);
+  }
+
+  @Post('issues/:repositoryId/:number/task')
+  createTaskFromIssue(
+    @Param('projectId') projectId: string,
+    @Param('repositoryId') repositoryId: string,
+    @Param('number', ParseIntPipe) number: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.github.createTaskFromIssue(
+      projectId,
+      user.id,
+      repositoryId,
+      number,
+    );
   }
 
   @Post('repositories')

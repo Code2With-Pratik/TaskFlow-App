@@ -46,7 +46,7 @@ type ConfirmationRequest = {
   onConfirm: () => void;
 };
 
-const statuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
+const statuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "BLOCKED", "DONE"];
 const priorities: TaskPriority[] = ["LOW", "MEDIUM", "HIGH"];
 const MAX_SOURCE_IMAGE_BYTES = 12 * 1024 * 1024;
 const MAX_COMPRESSED_IMAGE_BYTES = 1024 * 1024;

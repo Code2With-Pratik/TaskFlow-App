@@ -26,6 +26,7 @@ const statuses: Array<{
   { value: "OVERDUE", label: "Overdue", tone: "bg-warning" },
   { value: "TODO", label: "To do", tone: "bg-danger" },
   { value: "IN_PROGRESS", label: "In progress", tone: "bg-warning" },
+  { value: "BLOCKED", label: "Blocked", tone: "bg-danger" },
   { value: "DONE", label: "Done", tone: "bg-success" },
 ];
 

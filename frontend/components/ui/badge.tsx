@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 const badgeColors: Record<string, string> = {
   TODO: "bg-danger/10 text-danger-foreground ring-1 ring-danger/20",
   IN_PROGRESS: "bg-warning/10 text-warning",
+  BLOCKED: "bg-danger/10 text-danger-foreground ring-1 ring-danger/20",
   DONE: "bg-success/10 text-success",
   LOW: "bg-surface-secondary text-muted",
   MEDIUM: "bg-surface-secondary text-foreground",
@@ -16,6 +17,7 @@ const badgeColors: Record<string, string> = {
 const badgeLabels: Record<string, string> = {
   TODO: "To do",
   IN_PROGRESS: "In progress",
+  BLOCKED: "Blocked",
   DONE: "Done",
 };
 
