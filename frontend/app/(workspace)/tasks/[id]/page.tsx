@@ -503,14 +503,10 @@ export default function TaskDetailsPage() {
                             />
                           </button>
                         ) : null}
-                        {commentsQuery.data.some(
-                          (reply) => reply.parentId === comment.id,
-                        ) ||
-                        membersQuery.data.length > 0 ? (
-                          <div className="mt-3 border-l-2 border-border pl-3">
-                            {commentsQuery.data
-                              .filter((reply) => reply.parentId === comment.id)
-                              .map((reply) => (
+                        <div className="mt-3 border-l-2 border-border pl-3">
+                          {commentsQuery.data
+                            .filter((reply) => reply.parentId === comment.id)
+                            .map((reply) => (
                                 <div
                                   className="border-b border-border py-3 last:border-b-0"
                                   id={`comment-${reply.id}`}
@@ -546,14 +542,13 @@ export default function TaskDetailsPage() {
                                     />
                                   ) : null}
                                 </div>
-                              ))}
-                            <CommentReplyComposer
-                              members={membersQuery.data}
-                              parentId={comment.id}
-                              taskId={id}
-                            />
-                          </div>
-                        ) : null}
+                            ))}
+                          <CommentReplyComposer
+                            members={membersQuery.data}
+                            parentId={comment.id}
+                            taskId={id}
+                          />
+                        </div>
                       </div>
                     </article>
                   ))}

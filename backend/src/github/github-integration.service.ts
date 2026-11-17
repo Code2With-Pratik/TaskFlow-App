@@ -2,10 +2,10 @@ import {
   BadGatewayException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -334,7 +334,6 @@ export class GitHubIntegrationService {
       select: {
         id: true,
         projectId: true,
-        githubLinks: { select: { id: true } },
       },
     });
     if (!task) throw new NotFoundException('Task was not found');
@@ -437,7 +436,7 @@ export class GitHubIntegrationService {
       membership.role !== ProjectRole.OWNER &&
       membership.role !== ProjectRole.ADMIN
     ) {
-      throw new UnauthorizedException('You cannot remove this GitHub link');
+      throw new ForbiddenException('You cannot remove this GitHub link');
     }
     await this.prisma.taskGitHubLink.delete({ where: { id: linkId } });
   }

@@ -44,9 +44,11 @@ const notificationIcons: Record<NotificationType, AnimatedIcon> = {
   TASK_ASSIGNED: UserRoundPlus,
   TASK_STATUS_UPDATED: Check,
   COMMENT_ADDED: MessageSquareText,
+  COMMENT_MENTIONED: MessageSquareText,
   PROJECT_INVITATION: FolderPlus,
   TASK_DUE_SOON: Clock3,
   TASK_OVERDUE: TriangleAlert,
+  GITHUB_PULL_REQUEST_MERGED: Check,
 };
 
 const notificationPreviewLimit = 5;
@@ -670,7 +672,11 @@ function NotificationPreviewRow({
         </span>
         <div className="min-w-0 flex-1">
           <Link
-            href="/notifications"
+            href={
+              notification.href && notification.type !== "PROJECT_INVITATION"
+                ? notification.href
+                : "/notifications"
+            }
             className="glass-interactive block w-full rounded-md py-0.5 text-left focus-visible:outline"
             aria-label={`Open notifications: ${notification.title}`}
             onClick={onActivate}

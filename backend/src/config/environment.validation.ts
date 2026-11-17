@@ -20,11 +20,10 @@ export function validateEnvironment(environment: Environment): Environment {
     'GITHUB_APP_PRIVATE_KEY',
     'GITHUB_APP_WEBHOOK_SECRET',
   ] as const;
-  const configuredGitHubVariables = githubVariables.filter(
-    (name) =>
-      typeof environment[name] === 'string' &&
-      (environment[name] as string).trim().length > 0,
-  );
+  const configuredGitHubVariables = githubVariables.filter((name) => {
+    const value = environment[name];
+    return typeof value === 'string' && value.trim().length > 0;
+  });
   const accessTokenTtlSeconds = parseDuration(
     environment.ACCESS_TOKEN_TTL ?? '15m',
     'ACCESS_TOKEN_TTL',
@@ -79,7 +78,8 @@ export function validateEnvironment(environment: Environment): Environment {
   if (
     configuredGitHubVariables.length === githubVariables.length &&
     (typeof environment.GITHUB_APP_ID !== 'string' ||
-      !/^\d+$/.test(environment.GITHUB_APP_ID.trim()))
+      !/^[1-9]\d*$/.test(environment.GITHUB_APP_ID.trim()) ||
+      !Number.isSafeInteger(Number(environment.GITHUB_APP_ID)))
   ) {
     errors.push('GITHUB_APP_ID must be a positive integer');
   }

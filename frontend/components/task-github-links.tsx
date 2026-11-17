@@ -17,6 +17,7 @@ export function TaskGitHubLinks({ taskId }: { taskId: string }) {
     queryKey: ["task-github-links", taskId],
     queryFn: () =>
       apiFetch<TaskGitHubLink[]>(`/tasks/${taskId}/github-links`),
+    refetchInterval: 60_000,
   });
   const addLink = useMutation({
     mutationFn: (linkUrl: string) =>

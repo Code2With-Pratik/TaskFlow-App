@@ -56,6 +56,7 @@ export default function ProjectDetailsPage() {
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [invitationSent, setInvitationSent] = useState(false);
   const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
   const projectQuery = useQuery({
     queryKey: ["project", id],
@@ -121,6 +122,7 @@ export default function ProjectDetailsPage() {
       }),
     onSuccess: async () => {
       setActionError(null);
+      setInvitationSent(true);
       resetMember();
       await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
@@ -429,7 +431,10 @@ export default function ProjectDetailsPage() {
               {canManage ? (
                 <form
                   className="mt-4 border-t border-border pt-4"
-                  onSubmit={handleMemberSubmit(({ email }) => addMember.mutate(email))}
+                  onSubmit={handleMemberSubmit(({ email }) => {
+                    setInvitationSent(false);
+                    addMember.mutate(email);
+                  })}
                 >
                   <label className="mb-2 block text-xs font-medium text-foreground" htmlFor="member-email">
                     Invite an existing TaskFlow user
@@ -450,6 +455,11 @@ export default function ProjectDetailsPage() {
                   <p className="mt-2 text-[10px] leading-4 text-muted">
                     The person must already have an account. They’ll receive an in-app invitation and join after accepting it.
                   </p>
+                  {invitationSent ? (
+                    <p className="mt-2 text-xs text-success-foreground" role="status">
+                      Invitation sent. They can accept it from Notifications.
+                    </p>
+                  ) : null}
                 </form>
               ) : null}
               <p className="mt-3 text-[10px] text-muted">

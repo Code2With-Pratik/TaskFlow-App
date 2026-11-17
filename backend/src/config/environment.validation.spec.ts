@@ -39,6 +39,27 @@ describe('validateEnvironment', () => {
     ).not.toThrow();
   });
 
+  it('allows GitHub App integration to remain unconfigured', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        GITHUB_APP_ID: '',
+        GITHUB_APP_SLUG: '',
+        GITHUB_APP_PRIVATE_KEY: '',
+        GITHUB_APP_WEBHOOK_SECRET: '',
+      }),
+    ).not.toThrow();
+  });
+
+  it('requires all GitHub App credentials together', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        GITHUB_APP_ID: '12345',
+      }),
+    ).toThrow('must be configured together');
+  });
+
   it.each([
     ['PORT', '70000'],
     ['FRONTEND_URL', 'not-a-url'],
