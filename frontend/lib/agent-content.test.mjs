@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   acceptsMarkdown,
+  createAgentMarkdownResponse,
   homepageMarkdown,
   isKnownAppPath,
   notFoundMarkdown,
@@ -32,4 +33,33 @@ test("Markdown documents include product information and a documentation link", 
   assert.ok(homepageMarkdown.length > 500);
   assert.match(homepageMarkdown, /project and task management software/i);
   assert.match(notFoundMarkdown, /\[TaskFlow documentation\]\(\/llms\.txt\)/);
+});
+
+test("homepage negotiation returns Markdown with Vary: Accept", async () => {
+  const response = createAgentMarkdownResponse("/", "GET", "text/markdown");
+
+  assert.equal(response?.status, 200);
+  assert.match(response?.headers.get("content-type") ?? "", /^text\/markdown/);
+  assert.match(response?.headers.get("vary") ?? "", /\baccept\b/i);
+  assert.ok((await response?.text())?.length > 500);
+});
+
+test("unknown Markdown paths return linked 404 responses", async () => {
+  const response = createAgentMarkdownResponse(
+    "/__ora-404-probe-61ar21wy",
+    "GET",
+    "text/markdown",
+  );
+
+  assert.equal(response?.status, 404);
+  assert.match(response?.headers.get("content-type") ?? "", /^text\/markdown/);
+  assert.match(await response?.text() ?? "", /\[TaskFlow documentation\]/);
+});
+
+test("HTML requests and known page paths continue to Next.js", () => {
+  assert.equal(createAgentMarkdownResponse("/", "GET", "text/html"), null);
+  assert.equal(
+    createAgentMarkdownResponse("/login", "GET", "text/markdown"),
+    null,
+  );
 });

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
-  acceptsMarkdown,
-  homepageMarkdown,
-  isKnownAppPath,
-  notFoundMarkdown,
+  createAgentMarkdownResponse,
 } from "./lib/agent-content.mjs";
 
 function addAcceptVaryHeader(response: NextResponse): void {
@@ -21,26 +18,12 @@ function addAcceptVaryHeader(response: NextResponse): void {
 
 export function proxy(request: NextRequest): NextResponse | Response {
   const { pathname } = request.nextUrl;
-  const wantsMarkdown = acceptsMarkdown(request.headers.get("accept"));
-
-  if (wantsMarkdown && pathname === "/") {
-    return new Response(request.method === "HEAD" ? null : homepageMarkdown, {
-      headers: {
-        "Content-Type": "text/markdown; charset=utf-8",
-        Vary: "Accept",
-      },
-    });
-  }
-
-  if (wantsMarkdown && !isKnownAppPath(pathname)) {
-    return new Response(request.method === "HEAD" ? null : notFoundMarkdown, {
-      status: 404,
-      headers: {
-        "Content-Type": "text/markdown; charset=utf-8",
-        Vary: "Accept",
-      },
-    });
-  }
+  const markdownResponse = createAgentMarkdownResponse(
+    pathname,
+    request.method,
+    request.headers.get("accept"),
+  );
+  if (markdownResponse) return markdownResponse;
 
   const response = NextResponse.next();
   if (pathname === "/") addAcceptVaryHeader(response);

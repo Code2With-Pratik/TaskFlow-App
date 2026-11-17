@@ -25,6 +25,21 @@ export const notFoundMarkdown = `# Page not found
 The requested TaskFlow page does not exist. Check the address or visit the [TaskFlow documentation](/llms.txt) for product and developer resources.
 `;
 
+const staticAppPaths = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/dashboard",
+  "/notifications",
+  "/profile",
+  "/projects",
+  "/tasks",
+  "/settings",
+  "/llms.txt",
+  "/robots.txt",
+  "/sitemap.xml",
+]);
+
 export function acceptsMarkdown(acceptHeader) {
   if (!acceptHeader) return false;
 
@@ -39,24 +54,37 @@ export function acceptsMarkdown(acceptHeader) {
 
 export function isKnownAppPath(pathname) {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  const staticPaths = new Set([
-    "/",
-    "/login",
-    "/register",
-    "/dashboard",
-    "/notifications",
-    "/profile",
-    "/projects",
-    "/tasks",
-    "/settings",
-    "/llms.txt",
-    "/robots.txt",
-    "/sitemap.xml",
-  ]);
 
   return (
-    staticPaths.has(path) ||
+    staticAppPaths.has(path) ||
     /^\/projects\/[^/]+(?:\/board)?$/.test(path) ||
     /^\/tasks\/[^/]+$/.test(path)
   );
+}
+
+export function createAgentMarkdownResponse(
+  pathname,
+  method,
+  acceptHeader,
+) {
+  if (!acceptsMarkdown(acceptHeader)) return null;
+
+  if (pathname === "/") {
+    return new Response(method === "HEAD" ? null : homepageMarkdown, {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        Vary: "Accept",
+      },
+    });
+  }
+
+  if (isKnownAppPath(pathname)) return null;
+
+  return new Response(method === "HEAD" ? null : notFoundMarkdown, {
+    status: 404,
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      Vary: "Accept",
+    },
+  });
 }

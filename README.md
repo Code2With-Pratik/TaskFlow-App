@@ -75,6 +75,9 @@ NEXT_PUBLIC_API_URL=https://<your-nest-api-service>.onrender.com
 
 Use the API service origin only—do not add `/health` or `/api`. This variable
 is embedded at build time, so redeploy Vercel after changing it.
+Set `NEXT_PUBLIC_SITE_URL` to the public frontend origin when using a custom
+domain. It is used for canonical metadata, the sitemap, and `llms.txt`; without
+it, TaskFlow uses `https://task-flow-app-black.vercel.app`.
 
 The Render URL previously used by the app,
 `https://taskflow-app-w4mm.onrender.com`, is serving the Next.js frontend, not

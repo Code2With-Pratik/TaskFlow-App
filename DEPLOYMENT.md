@@ -84,11 +84,14 @@ variable.
    | Name | Value |
    | --- | --- |
    | `NEXT_PUBLIC_API_URL` | `https://<your-api-service>.onrender.com` |
+   | `NEXT_PUBLIC_SITE_URL` | `https://task-flow-app-black.vercel.app` |
 
    Use the new Nest API's origin only—do not append `/health`, `/api`, or a
    trailing slash. This is a public frontend setting, not a secret. Add it to
    **Production** and to **Preview** only if preview deployments should call
-   the production API.
+   the production API. `NEXT_PUBLIC_SITE_URL` sets the canonical URL used in
+   metadata, the sitemap, and `llms.txt`; set it to the frontend's public
+   origin if you use a custom domain.
 4. Save the variable and redeploy Vercel. `NEXT_PUBLIC_API_URL` is embedded
    during the frontend build, so changing it without redeploying will not update
    the deployed app.
@@ -108,6 +111,11 @@ variable.
    that there are no CORS, failed-fetch, or mixed-content errors.
 6. In Render, check the API and PostgreSQL logs/health. In Vercel, check the
    latest deployment and build logs.
+7. Check the frontend homepage with both `Accept: text/html` and
+   `Accept: text/markdown`; verify the Markdown response has
+   `Content-Type: text/markdown` and `Vary: Accept`. Also check `/llms.txt`,
+   `/robots.txt`, `/sitemap.xml`, and an unknown path with
+   `Accept: text/markdown` for a 404 Markdown response.
 
 Vercel and the default Render domain are different sites. The API sets its
 production refresh cookie with `SameSite=None; Secure` so credentialed browser
