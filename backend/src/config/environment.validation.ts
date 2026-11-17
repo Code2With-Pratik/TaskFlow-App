@@ -139,8 +139,20 @@ function parseDuration(
 
 function isHttpUrl(value: string): boolean {
   try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
+    const wildcardCount = value.match(/\*/g)?.length ?? 0;
+    if (wildcardCount > 1) return false;
+    const url = new URL(value.replace('*', 'taskflow-preview-wildcard'));
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+    if (wildcardCount === 0) return true;
+
+    return (
+      url.hostname.includes('taskflow-preview-wildcard') &&
+      url.username === '' &&
+      url.password === '' &&
+      url.pathname === '/' &&
+      url.search === '' &&
+      url.hash === ''
+    );
   } catch {
     return false;
   }

@@ -7,6 +7,10 @@ import express from 'express';
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from '../common/filters/all-exceptions.filter.js';
+import {
+  isAllowedFrontendOrigin,
+  normalizeFrontendOrigin,
+} from './frontend-origin.js';
 
 export function configureApp(
   app: INestApplication,
@@ -31,12 +35,12 @@ export function configureApp(
     .split(',')
     .map((url) => url.trim())
     .filter(Boolean)
-    .map((url) => new URL(url).origin);
+    .map(normalizeFrontendOrigin);
 
   const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
       // Allow requests without an Origin header (e.g. server-to-server)
-      if (!origin || frontendUrls.includes(origin)) {
+      if (!origin || isAllowedFrontendOrigin(origin, frontendUrls)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked for origin: ${origin}`), false);

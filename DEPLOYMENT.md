@@ -53,10 +53,14 @@ You can create it from the included `render.yaml` Blueprint, or manually:
    | `JWT_REFRESH_SECRET` | A different randomly generated secret with at least 32 characters |
 
    Render supplies `PORT`; do not hard-code it. If using a custom frontend
-   domain or Vercel preview deployment, append each exact origin to
-   `FRONTEND_URL`, separated by commas, for example:
-   `https://task-flow-app-delta-one.vercel.app,https://www.example.com`.
-   Do not add a trailing slash to an origin.
+   custom domain, append its exact origin to `FRONTEND_URL`, separated by
+   commas. To allow changing Vercel preview URLs, use a narrowly scoped
+   wildcard for the deployment name while keeping the team and project suffix
+   exact, for example:
+   `https://task-flow-app-delta-one.vercel.app,https://task-flow-*-pratik-dhandares-projects-ce46116e.vercel.app`.
+   The wildcard matches only letters, numbers, and hyphens within the hostname;
+   never use a broad pattern such as `https://*.vercel.app`. Do not add a
+   trailing slash to an origin.
 
 5. Deploy and wait for the service to become healthy. Render runs Prisma
    migrations before starting the API.

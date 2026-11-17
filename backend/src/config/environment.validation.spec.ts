@@ -39,6 +39,16 @@ describe('validateEnvironment', () => {
     ).not.toThrow();
   });
 
+  it('accepts a scoped wildcard for changing Vercel deployment preview URLs', () => {
+    expect(() =>
+      validateEnvironment({
+        ...validEnvironment,
+        FRONTEND_URL:
+          'https://task-flow-*-pratik-dhandares-projects-ce46116e.vercel.app',
+      }),
+    ).not.toThrow();
+  });
+
   it('allows GitHub App integration to remain unconfigured', () => {
     expect(() =>
       validateEnvironment({
@@ -76,6 +86,8 @@ describe('validateEnvironment', () => {
     ['PORT', '70000'],
     ['FRONTEND_URL', 'not-a-url'],
     ['FRONTEND_URL', 'https://valid.example.com,not-a-url'],
+    ['FRONTEND_URL', 'https://*.vercel.app/path'],
+    ['FRONTEND_URL', 'https://one-*-two-*.vercel.app'],
     ['DATABASE_URL', 'mysql://localhost/taskflow'],
     ['JWT_ACCESS_SECRET', 'too-short'],
     ['ACCESS_TOKEN_TTL', '15 weeks'],

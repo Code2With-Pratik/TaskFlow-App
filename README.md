@@ -97,7 +97,10 @@ the API is deployed, verify that
 `https://<your-nest-api-service>.onrender.com/health` returns JSON with
 `"status":"ok"`. Then set that service URL in Vercel as
 `NEXT_PUBLIC_API_URL` and redeploy. `FRONTEND_URL` must match the Vercel origin
-exactly. Add other Vercel preview/custom origins as comma-separated URLs.
+exactly. Add custom origins as comma-separated URLs; for changing Vercel
+preview URLs, use a narrowly scoped wildcard such as
+`https://task-flow-*-pratik-dhandares-projects-ce46116e.vercel.app`. Keep the
+project/team suffix exact; do not allow all of `*.vercel.app`.
 
 Because Vercel and Render use different sites, the production refresh cookie
 uses `SameSite=None; Secure`. Browsers that block third-party cookies may
