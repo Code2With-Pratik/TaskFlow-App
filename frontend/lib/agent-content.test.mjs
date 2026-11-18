@@ -94,7 +94,7 @@ test("About, Contact, and Privacy pages each provide a substantive trust anchor"
   assert.match(privacyContent.sections.flatMap((section) => section.paragraphs).join(" "), /Vercel Web Analytics and Speed Insights/);
 });
 
-test("CSP uses request nonces, trusted types, and only the configured API origins", () => {
+test("CSP uses request nonces and only the configured API origins", () => {
   const policy = createContentSecurityPolicy(
     "test-nonce",
     "https://api.taskflow.example",
@@ -106,8 +106,7 @@ test("CSP uses request nonces, trusted types, and only the configured API origin
   assert.match(scriptPolicy ?? "", /'nonce-test-nonce'/);
   assert.match(scriptPolicy ?? "", /'strict-dynamic'/);
   assert.doesNotMatch(scriptPolicy ?? "", /unsafe-inline/);
-  assert.match(policy, /require-trusted-types-for 'script'/);
-  assert.match(policy, /trusted-types nextjs nextjs#bundler/);
+  assert.doesNotMatch(policy, /require-trusted-types-for/);
   assert.match(policy, /https:\/\/api\.taskflow\.example/);
   assert.match(policy, /wss:\/\/api\.taskflow\.example/);
   assert.match(

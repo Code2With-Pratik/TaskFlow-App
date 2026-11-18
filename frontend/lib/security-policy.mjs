@@ -20,8 +20,6 @@ export function createContentSecurityPolicy(
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "require-trusted-types-for 'script'",
-    "trusted-types nextjs nextjs#bundler",
   ];
 
   if (!isDevelopment) directives.push("upgrade-insecure-requests");
