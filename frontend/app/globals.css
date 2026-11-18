@@ -2305,6 +2305,19 @@ select:focus-visible,
   }
 }
 
+@keyframes landing-mobile-menu-open {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    max-height: 22rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 760px) {
   .landing-hero {
     padding-top: 67px;
@@ -2402,9 +2415,11 @@ select:focus-visible,
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: hidden;
     border-top: 1px solid rgb(255 255 255 / 7%);
     padding: 10px 16px 16px;
     background: #0b0b0b;
+    animation: landing-mobile-menu-open 240ms ease-out both;
   }
 
   .landing-mobile-menu > a:not(.landing-button) {

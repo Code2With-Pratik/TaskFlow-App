@@ -323,11 +323,11 @@ function LandingNav() {
           <Link className="landing-button landing-button-small landing-login-button" href="/login">Log in</Link>
           <Link className="landing-button landing-button-small" href="/register">Get started <ArrowRight size={14} /></Link>
         </div>
-        <button className="landing-mobile-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="landing-mobile-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="landing-mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
-      {menuOpen && <nav className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link className="landing-button landing-login-button" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
+      {menuOpen && <nav id="landing-mobile-navigation" className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link className="landing-button landing-login-button" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
     </header>
   );
 }
