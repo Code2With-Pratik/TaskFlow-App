@@ -433,11 +433,32 @@ select:focus-visible,
   box-shadow: 0 4px 22px rgb(255 255 255 / 8%);
 }
 
+.landing-page a.landing-button {
+  color: #080808;
+}
+
+.landing-page a.landing-login-button {
+  border-color: #fff;
+  background: #080808;
+  color: #fff;
+  box-shadow: none;
+}
+
 .landing-button:hover {
   transform: translateY(-2px);
   border-color: #dedede;
   background: #dedede;
   color: #080808;
+}
+
+.landing-page a.landing-button:hover {
+  color: #080808;
+}
+
+.landing-page a.landing-login-button:hover {
+  border-color: #d6d6d6;
+  background: #202020;
+  color: #fff;
 }
 
 .landing-button-small {

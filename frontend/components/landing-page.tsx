@@ -320,14 +320,14 @@ function LandingNav() {
           {navigation.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
         </nav>
         <div className="landing-nav-actions">
-          <Link className="landing-button landing-button-small landing-button-light" href="/login">Log in</Link>
-          <Link className="landing-button landing-button-small landing-button-light" href="/register">Get started <ArrowRight size={14} /></Link>
+          <Link className="landing-button landing-button-small landing-login-button" href="/login">Log in</Link>
+          <Link className="landing-button landing-button-small" href="/register">Get started <ArrowRight size={14} /></Link>
         </div>
         <button className="landing-mobile-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
-      {menuOpen && <nav className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link className="landing-button landing-button-light" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button landing-button-light" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
+      {menuOpen && <nav className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link className="landing-button landing-login-button" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
     </header>
   );
 }
@@ -424,7 +424,7 @@ export function LandingPage() {
         <section className="landing-final-cta" aria-labelledby="final-cta-title">
           <div className="landing-cta-orbit landing-cta-orbit-one" />
           <div className="landing-cta-orbit landing-cta-orbit-two" />
-          <div className="landing-cta-content"><p className="landing-kicker">MAKE ROOM FOR GOOD WORK</p><h2 id="final-cta-title">Your next project<br /><span>deserves a better flow.</span></h2><p>Bring your projects, teammates, and development work into one focused space.</p><div className="landing-hero-actions"><Link className="landing-button landing-button-light" href="/register">Get started <ArrowRight size={16} /></Link><Link className="landing-button landing-button-light" href="/login">Log in to TaskFlow <span>↗</span></Link></div></div>
+          <div className="landing-cta-content"><p className="landing-kicker">MAKE ROOM FOR GOOD WORK</p><h2 id="final-cta-title">Your next project<br /><span>deserves a better flow.</span></h2><p>Bring your projects, teammates, and development work into one focused space.</p><div className="landing-hero-actions"><Link className="landing-button" href="/register">Get started <ArrowRight size={16} /></Link><Link className="landing-button landing-login-button" href="/login">Log in to TaskFlow <span>↗</span></Link></div></div>
           <div className="landing-cta-fragment"><div className="landing-cta-fragment-top"><span className="landing-green-dot" /> PROJECT STATUS <b>ON TRACK</b></div><strong>Website refresh</strong><div className="landing-progress"><span /></div><div className="flex items-center justify-between text-[10px] text-white/40"><span>8 of 12 tasks complete</span><AvatarStack small /></div></div>
         </section>
       </main>
