@@ -51,8 +51,8 @@
 }
 
 .brand-mark {
-  background: var(--surface-secondary);
-  color: #000000;
+  background: #000000;
+  color: #ffffff;
 }
 
 :root[data-theme="dark"] .brand-mark {
