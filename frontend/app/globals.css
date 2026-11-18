@@ -81,6 +81,10 @@
   border-color: var(--border);
 }
 
+.auth-decoration-circle {
+  border: 1px solid #fff;
+}
+
 .primary-action {
   border: 1px solid var(--primary-action-edge);
   box-shadow: var(--primary-action-shadow);
@@ -331,7 +335,8 @@ select:focus-visible,
   height: 22px;
   grid-template: repeat(2, 1fr) / repeat(2, 1fr);
   gap: 2px;
-  transform: rotate(-8deg);
+  animation: taskflow-logo-bounce 2.4s ease-in-out infinite;
+  transform-origin: center;
 }
 
 .taskflow-mark span {
@@ -382,11 +387,6 @@ select:focus-visible,
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.045em;
-}
-
-.landing-wordmark .taskflow-mark {
-  animation: landing-logo-bounce 2.4s ease-in-out infinite;
-  transform-origin: center;
 }
 
 .landing-nav-links,
@@ -2210,7 +2210,7 @@ select:focus-visible,
   }
 }
 
-@keyframes landing-logo-bounce {
+@keyframes taskflow-logo-bounce {
   0%,
   100% {
     transform: translateY(0) rotate(-5deg);

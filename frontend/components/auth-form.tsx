@@ -101,8 +101,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <div className="grid min-h-screen bg-canvas lg:grid-cols-[1fr_0.9fr]">
       <section className="relative hidden overflow-hidden bg-[#090909] px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between xl:px-20">
-        <div className="absolute -right-36 -top-32 size-[520px] rounded-full border border-white" />
-        <div className="absolute -right-16 -top-12 size-[340px] rounded-full border border-white" />
+        <div className="auth-decoration-circle absolute -right-36 -top-32 size-[520px] rounded-full border" />
+        <div className="auth-decoration-circle absolute -right-16 -top-12 size-[340px] rounded-full border" />
         <IconHover>
           <Link href="/" className="relative z-10 flex items-center gap-3">
             <span className="brand-mark grid size-10 place-items-center rounded-xl">
