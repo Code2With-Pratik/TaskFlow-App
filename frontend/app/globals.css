@@ -384,6 +384,11 @@ select:focus-visible,
   letter-spacing: -0.045em;
 }
 
+.landing-wordmark .taskflow-mark {
+  animation: landing-logo-bounce 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
 .landing-nav-links,
 .landing-nav-actions {
   display: flex;
@@ -393,15 +398,15 @@ select:focus-visible,
 
 .landing-nav-links a,
 .landing-login-link {
-  color: #a4a4a4;
-  font-size: 12px;
+  color: #ffffff;
+  font-size: 14px;
   transition: color 160ms ease;
 }
 
 .landing-nav-links a:hover,
 .landing-login-link:hover,
 .landing-footer a:hover {
-  color: #fff;
+  color: #cacaca;
 }
 
 .landing-nav-actions {
@@ -437,6 +442,10 @@ select:focus-visible,
   color: #080808;
 }
 
+.landing-page a.landing-button:not(.landing-login-button) svg {
+  color: #080808;
+}
+
 .landing-page a.landing-login-button {
   border-color: #fff;
   background: #080808;
@@ -458,6 +467,10 @@ select:focus-visible,
 .landing-page a.landing-login-button:hover {
   border-color: #d6d6d6;
   background: #202020;
+  color: #fff;
+}
+
+.landing-page a.landing-login-button svg {
   color: #fff;
 }
 
@@ -2194,6 +2207,25 @@ select:focus-visible,
   }
   50% {
     transform: translateY(-6px);
+  }
+}
+
+@keyframes landing-logo-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  14% {
+    transform: translateY(-4px) rotate(8deg);
+  }
+  28% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  40% {
+    transform: translateY(-2px) rotate(5deg);
+  }
+  52% {
+    transform: translateY(0) rotate(-3deg);
   }
 }
 
