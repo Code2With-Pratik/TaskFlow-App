@@ -9,8 +9,8 @@ import {
   LayoutDashboard,
   Settings2,
   Users,
-  Workflow,
 } from "@/components/animated-icons";
+import { BrandMark } from "@/components/brand-mark";
 import { IconHover } from "@/components/icon-hover";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
@@ -48,7 +48,7 @@ export function AppSidebar({
           onClick={onNavigate}
         >
           <span className="brand-mark grid size-9 place-items-center rounded-xl shadow-sm">
-            <Workflow size={19} strokeWidth={2.2} />
+            <BrandMark />
           </span>
           <span className="text-[17px] font-semibold tracking-tight text-foreground">
             TaskFlow

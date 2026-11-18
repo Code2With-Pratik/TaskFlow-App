@@ -300,12 +300,12 @@ select:focus-visible,
   --landing-panel-raised: #151515;
   --landing-border: rgb(255 255 255 / 9%);
   --landing-muted: #9a9a9a;
-  --landing-red: #ff3939;
+  --landing-red: #c8c8c8;
   min-height: 100vh;
   overflow: hidden;
   background: var(--landing-bg);
   color: #f5f5f5;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-arima), sans-serif;
   font-size: 14px;
   line-height: 1.5;
   scroll-behavior: smooth;
@@ -325,7 +325,7 @@ select:focus-visible,
   font: inherit;
 }
 
-.landing-brand-mark {
+.taskflow-mark {
   display: grid;
   width: 22px;
   height: 22px;
@@ -334,21 +334,26 @@ select:focus-visible,
   transform: rotate(-8deg);
 }
 
-.landing-brand-mark span {
+.taskflow-mark span {
   border-radius: 2px;
   background: #f5f5f5;
 }
 
-.landing-brand-mark span:nth-child(2) {
+.taskflow-mark span:nth-child(2) {
   opacity: 0.62;
 }
 
-.landing-brand-mark span:nth-child(3) {
+.taskflow-mark span:nth-child(3) {
   opacity: 0.78;
 }
 
-.landing-brand-mark span:nth-child(4) {
-  background: var(--landing-red);
+.taskflow-mark span:nth-child(4) {
+  background: #ff3939;
+}
+
+.brand-mark .taskflow-mark {
+  width: 18px;
+  height: 18px;
 }
 
 .landing-nav {
@@ -422,15 +427,17 @@ select:focus-visible,
 }
 
 .landing-button {
-  border: 1px solid #ff5252;
-  background: var(--landing-red);
-  color: #fff;
-  box-shadow: 0 4px 22px rgb(255 57 57 / 14%);
+  border: 1px solid #fff;
+  background: #fff;
+  color: #080808;
+  box-shadow: 0 4px 22px rgb(255 255 255 / 8%);
 }
 
 .landing-button:hover {
   transform: translateY(-2px);
-  background: #f02d2d;
+  border-color: #dedede;
+  background: #dedede;
+  color: #080808;
 }
 
 .landing-button-small {
@@ -472,7 +479,7 @@ select:focus-visible,
   width: 650px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgb(255 54 54 / 8%), transparent 68%);
+  background: radial-gradient(ellipse, rgb(255 255 255 / 5%), transparent 68%);
   content: "";
   pointer-events: none;
   transform: translateX(-50%);
@@ -517,13 +524,13 @@ select:focus-visible,
   height: 6px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #7ade9a;
-  box-shadow: 0 0 10px rgb(122 222 154 / 36%);
+  background: #aaa;
+  box-shadow: 0 0 8px rgb(255 255 255 / 16%);
 }
 
 .landing-announcement > span {
   background: var(--landing-red);
-  box-shadow: 0 0 10px rgb(255 57 57 / 52%);
+  box-shadow: 0 0 8px rgb(255 255 255 / 20%);
 }
 
 .landing-hero h1 {
@@ -613,7 +620,7 @@ select:focus-visible,
   background: #101010;
 }
 
-.landing-dashboard-topbar .landing-brand-mark {
+.landing-dashboard-topbar .taskflow-mark {
   width: 15px;
   height: 15px;
   gap: 1px;
@@ -650,20 +657,20 @@ select:focus-visible,
   margin-left: -5px;
   border: 2px solid #121212;
   border-radius: 50%;
-  background: #4a3838;
-  color: #ffe4e4;
+  background: #424242;
+  color: #eee;
   font-size: 7px;
   font-weight: 700;
 }
 
 .landing-avatars > span:nth-child(2) {
-  background: #3a454d;
-  color: #e0f0f9;
+  background: #555;
+  color: #eee;
 }
 
 .landing-avatars > span:nth-child(3) {
-  background: #4b4636;
-  color: #f6edce;
+  background: #686868;
+  color: #fff;
 }
 
 .landing-avatars-small > span {
@@ -674,7 +681,7 @@ select:focus-visible,
 
 .landing-dashboard-body {
   display: grid;
-  min-height: 340px;
+  min-height: 440px;
   grid-template-columns: 175px minmax(0, 1fr);
 }
 
@@ -773,27 +780,158 @@ select:focus-visible,
 
 .landing-preview-stats {
   display: grid;
-  grid-template-columns: 1.3fr 0.8fr 0.8fr;
-  gap: 18px;
-  margin-top: 20px;
-  border-block: 1px solid rgb(255 255 255 / 7%);
-  padding: 13px 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 18px;
 }
 
 .landing-preview-stats > div {
   display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 6px;
+  padding: 9px;
+  background: #111;
 }
 
 .landing-preview-stats span {
+  overflow: hidden;
   color: #777;
-  font-size: 8px;
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .landing-preview-stats strong {
   color: #eee;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.landing-preview-stats small {
+  overflow: hidden;
+  color: #737373;
+  font-size: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-preview-new-project {
+  flex: 0 0 auto;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 5px;
+  padding: 5px 8px;
+  color: #ddd;
+  font-size: 8px;
+}
+
+.landing-dashboard-panels {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.landing-dashboard-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 6px;
+  padding: 9px;
+  background: #101010;
+}
+
+.landing-dashboard-panel > b,
+.landing-dashboard-bottom > div > b {
+  overflow: hidden;
+  color: #ddd;
+  font-size: 7px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-dashboard-panel-task {
+  overflow: hidden;
+  color: #aaa;
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-dashboard-panel > small {
+  overflow: hidden;
+  margin-top: auto;
+  color: #747474;
+  font-size: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 6px;
+  padding: 9px;
+  background: #101010;
+}
+
+.landing-dashboard-bottom > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.landing-dashboard-bottom > div + div {
+  border-left: 1px solid rgb(255 255 255 / 7%);
+  padding-left: 10px;
+}
+
+.landing-dashboard-bottom > div > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  color: #aaa;
+  font-size: 7px;
+}
+
+.landing-dashboard-bottom > div > span > small {
+  overflow: hidden;
+  margin-left: auto;
+  color: #737373;
+  font-size: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-dashboard-bottom > div > span > i {
+  display: grid;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #454545;
+  color: #eee;
+  font-size: 5px;
+  font-style: normal;
+}
+
+.landing-dashboard-bottom > div > span > i.landing-mini-avatar-alt {
+  background: #606060;
+}
+
+.landing-dashboard-bottom > div > span > small > strong {
+  color: #ccc;
   font-weight: 600;
 }
 
@@ -878,8 +1016,8 @@ select:focus-visible,
 
 .landing-status-done,
 .landing-status-green {
-  border-color: #6dcc8a;
-  background: #6dcc8a;
+  border-color: #aaa;
+  background: #aaa;
 }
 
 .landing-status-todo {
@@ -956,13 +1094,13 @@ select:focus-visible,
   flex: 0 0 auto;
   place-items: center;
   border-radius: 7px;
-  background: rgb(87 205 119 / 12%);
-  color: #81d995;
+  background: rgb(255 255 255 / 8%);
+  color: #ddd;
 }
 
 .landing-float-icon-red {
-  background: rgb(255 57 57 / 13%);
-  color: #ff7171;
+  background: rgb(255 255 255 / 8%);
+  color: #ddd;
 }
 
 .landing-float-progress {
@@ -1161,8 +1299,8 @@ select:focus-visible,
 }
 
 .landing-mini-project-icon.icon-red {
-  background: rgb(255 57 57 / 13%);
-  color: #ff6b6b;
+  background: rgb(255 255 255 / 8%);
+  color: #ddd;
 }
 
 .landing-mini-project > span:nth-child(2) {
@@ -1284,13 +1422,13 @@ select:focus-visible,
 }
 
 .landing-mini-task > i.task-red {
-  border-color: rgb(255 57 57 / 22%);
-  color: #ff7777;
+  border-color: rgb(255 255 255 / 18%);
+  color: #ddd;
 }
 
 .landing-mini-task > i.task-green {
-  border-color: rgb(122 222 154 / 22%);
-  color: #80d997;
+  border-color: rgb(255 255 255 / 18%);
+  color: #ddd;
 }
 
 .landing-mini-team {
@@ -1319,20 +1457,20 @@ select:focus-visible,
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
-  background: #4a3838;
-  color: #f4d5d5;
+  background: #424242;
+  color: #eee;
   font-size: 7px;
   font-weight: 700;
 }
 
 .landing-aside-avatar.avatar-alt {
-  background: #35434a;
-  color: #d5e8f2;
+  background: #555;
+  color: #eee;
 }
 
 .landing-aside-avatar.avatar-third {
-  background: #4b4636;
-  color: #eee3c5;
+  background: #686868;
+  color: #fff;
 }
 
 .landing-product-section {
@@ -1403,15 +1541,15 @@ select:focus-visible,
 }
 
 .landing-window-bar > span:first-child {
-  background: #fa5c58;
+  background: #777;
 }
 
 .landing-window-bar > span:nth-child(2) {
-  background: #e5b54f;
+  background: #5e5e5e;
 }
 
 .landing-window-bar > span:nth-child(3) {
-  background: #56bd73;
+  background: #858585;
 }
 
 .landing-window-path {
@@ -1443,13 +1581,13 @@ select:focus-visible,
   color: #696969;
 }
 
-.landing-product-rail .landing-brand-mark {
+.landing-product-rail .taskflow-mark {
   width: 17px;
   height: 17px;
   margin-bottom: 8px;
 }
 
-.landing-product-rail > span:not(.landing-brand-mark) {
+.landing-product-rail > span:not(.taskflow-mark) {
   display: grid;
   width: 29px;
   height: 29px;
@@ -1558,7 +1696,7 @@ select:focus-visible,
 }
 
 .landing-row-indicator.is-done {
-  color: #79d596;
+  color: #aaa;
 }
 
 .landing-row-indicator.is-review > span {
@@ -1575,7 +1713,7 @@ select:focus-visible,
 }
 
 .landing-row-state.state-green {
-  color: #80d997;
+  color: #aaa;
 }
 
 .landing-product-aside {
@@ -1691,8 +1829,8 @@ select:focus-visible,
 
 .landing-workflow-step:first-child .landing-step-node,
 .landing-workflow-step:last-child .landing-step-node {
-  border-color: var(--landing-red);
-  background: var(--landing-red);
+  border-color: #aaa;
+  background: #aaa;
 }
 
 .landing-step-node > span {
@@ -1742,7 +1880,7 @@ select:focus-visible,
 }
 
 .landing-text-link:hover {
-  color: var(--landing-red);
+  color: #fff;
 }
 
 .landing-compare-visual {
@@ -1830,7 +1968,7 @@ select:focus-visible,
   font-size: 9px;
 }
 
-.landing-unified-card .landing-brand-mark {
+.landing-unified-card .taskflow-mark {
   width: 15px;
   height: 15px;
 }
@@ -1923,7 +2061,7 @@ select:focus-visible,
   right: 10px;
   width: 330px;
   height: 330px;
-  border-color: rgb(255 57 57 / 10%);
+  border-color: rgb(255 255 255 / 8%);
 }
 
 .landing-cta-fragment {
@@ -1955,7 +2093,7 @@ select:focus-visible,
 
 .landing-cta-fragment-top b {
   margin-left: auto;
-  color: #78cf90;
+  color: #ccc;
   font-size: 7px;
 }
 
@@ -2069,6 +2207,10 @@ select:focus-visible,
 
   .landing-preview-columns {
     gap: 6px;
+  }
+
+  .landing-dashboard-panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .landing-task-card {
@@ -2194,7 +2336,7 @@ select:focus-visible,
   }
 
   .landing-dashboard-body {
-    min-height: 285px;
+    min-height: 440px;
     grid-template-columns: 85px minmax(0, 1fr);
   }
 
@@ -2258,10 +2400,21 @@ select:focus-visible,
   }
 
   .landing-preview-stats {
-    grid-template-columns: 1.1fr 0.7fr 0.8fr;
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
     margin-top: 13px;
-    padding-block: 10px;
+  }
+
+  .landing-preview-stats > div {
+    padding: 6px;
+  }
+
+  .landing-preview-stats > div:last-child {
+    grid-column: span 2;
+  }
+
+  .landing-preview-stats small {
+    font-size: 5px;
   }
 
   .landing-preview-stats span {
@@ -2275,6 +2428,34 @@ select:focus-visible,
   .landing-preview-columns {
     gap: 4px;
     margin-top: 12px;
+  }
+
+  .landing-dashboard-panels {
+    gap: 4px;
+  }
+
+  .landing-dashboard-panel {
+    gap: 5px;
+    min-height: 74px;
+    padding: 6px;
+  }
+
+  .landing-dashboard-panel > b,
+  .landing-dashboard-panel-task {
+    font-size: 6px;
+  }
+
+  .landing-dashboard-bottom {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 7px;
+  }
+
+  .landing-dashboard-bottom > div + div {
+    border-top: 1px solid rgb(255 255 255 / 7%);
+    border-left: 0;
+    padding-top: 7px;
+    padding-left: 0;
   }
 
   .landing-column-heading {
@@ -2424,7 +2605,7 @@ select:focus-visible,
     gap: 9px;
   }
 
-  .landing-product-rail > span:not(.landing-brand-mark) {
+  .landing-product-rail > span:not(.taskflow-mark) {
     width: 25px;
     height: 25px;
   }

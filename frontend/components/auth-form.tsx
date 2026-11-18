@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Eye, EyeOff, Workflow } from "@/components/animated-icons";
+import { ArrowRight, Eye, EyeOff } from "@/components/animated-icons";
+import { BrandMark } from "@/components/brand-mark";
 import { IconHover } from "@/components/icon-hover";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -105,7 +106,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <IconHover>
           <Link href="/" className="relative z-10 flex items-center gap-3">
             <span className="brand-mark grid size-10 place-items-center rounded-xl">
-              <Workflow size={21} />
+              <BrandMark />
             </span>
             <span className="text-lg font-semibold">TaskFlow</span>
           </Link>
@@ -168,7 +169,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               className="mb-12 inline-flex items-center gap-2.5 lg:hidden"
             >
               <span className="brand-mark grid size-9 place-items-center rounded-xl">
-                <Workflow size={19} />
+                <BrandMark />
               </span>
               <span className="text-base font-semibold">TaskFlow</span>
             </Link>

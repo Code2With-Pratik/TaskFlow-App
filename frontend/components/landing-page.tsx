@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { BrandMark } from "@/components/brand-mark";
 import {
   ArrowRight,
   Bell,
@@ -123,17 +124,6 @@ const bentoFeatures = [
   },
 ];
 
-function BrandMark() {
-  return (
-    <span className="landing-brand-mark" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-      <span />
-    </span>
-  );
-}
-
 function AvatarStack({ small = false }: { small?: boolean }) {
   return (
     <span className={`landing-avatars${small ? " landing-avatars-small" : ""}`} aria-label="Three sample teammates">
@@ -174,39 +164,36 @@ function DashboardPreview() {
           <div className="landing-dashboard-main">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="landing-preview-label">PROJECT OVERVIEW</p>
-                <h3 className="mt-1 text-[17px] font-semibold tracking-tight text-white sm:text-xl">Website refresh</h3>
-                <p className="mt-1 text-[10px] text-white/40 sm:text-xs">A focused space for the next release.</p>
+                <p className="landing-preview-label">YOUR WORKSPACE</p>
+                <h3 className="mt-1 text-[17px] font-semibold tracking-tight text-white sm:text-xl">A clear view of your work</h3>
+                <p className="mt-1 text-[10px] text-white/40 sm:text-xs">Here’s what’s moving across your projects today.</p>
               </div>
-              <AvatarStack small />
+              <span className="landing-preview-new-project">+ New project</span>
             </div>
-            <div className="landing-preview-stats">
-              <div><span>Progress</span><strong>68%</strong><div className="landing-progress"><span /></div></div>
-              <div><span>Open tasks</span><strong>12</strong></div>
-              <div><span>Due date</span><strong>Nov 28</strong></div>
+            <div className="landing-preview-stats" aria-label="Sample workspace statistics">
+              <div><span>Active projects</span><strong>4</strong><small>You’re a member of</small></div>
+              <div><span>Total tasks</span><strong>24</strong><small>8 to do · 6 in progress</small></div>
+              <div><span>Completed</span><strong>16</strong><small>Across your workspace</small></div>
+              <div><span>Overdue</span><strong>2</strong><small>Need a little attention</small></div>
+              <div><span>Blocked</span><strong>1</strong><small>Across your projects</small></div>
             </div>
-            <div className="landing-preview-columns">
+            <div className="landing-dashboard-panels">
               {[
-                { label: "IN PROGRESS", tasks: ["Build workspace nav", "Review API errors"] },
-                { label: "TO DO", tasks: ["Polish mobile board", "Write release notes"] },
-                { label: "DONE", tasks: ["Set up project", "Invite team"] },
-              ].map((column) => (
-                <div className="landing-preview-column" key={column.label}>
-                  <div className="landing-column-heading"><span>{column.label}</span><span>{column.tasks.length}</span></div>
-                  {column.tasks.map((task, index) => (
-                    <div className="landing-task-card" key={task}>
-                      <span className={`landing-task-status landing-status-${column.label === "DONE" ? "done" : column.label === "TO DO" ? "todo" : "progress"}`} />
-                      <span>{task}</span>
-                      {index === 0 && <span className="landing-task-priority">↑</span>}
-                    </div>
-                  ))}
+                { title: "My tasks", rows: ["Ship project overview", "Review API errors"], note: "2 tasks assigned" },
+                { title: "Blocked work", rows: ["Resolve deployment config"], note: "1 needs attention" },
+                { title: "Pull requests to review", rows: ["feat: project activity feed"], note: "taskflow/web · #248" },
+                { title: "Recently merged", rows: ["fix: board column layout"], note: "taskflow/web · #246" },
+              ].map((panel) => (
+                <div className="landing-dashboard-panel" key={panel.title}>
+                  <b>{panel.title}</b>
+                  {panel.rows.map((row) => <span className="landing-dashboard-panel-task" key={row}>{row}</span>)}
+                  <small>{panel.note}</small>
                 </div>
               ))}
             </div>
-            <div className="landing-preview-activity">
-              <span className="landing-activity-line" />
-              <span><b>Maya</b> linked pull request <b>#248</b> to a task</span>
-              <span className="landing-activity-time">just now</span>
+            <div className="landing-dashboard-bottom">
+              <div><b>Upcoming deadlines</b><span>Polish mobile board <small>Website refresh · Nov 21</small></span><span>Prepare release notes <small>Mobile app · Nov 24</small></span></div>
+              <div><b>Recent activity</b><span><i>MC</i><small><strong>Maya</strong> updated a task · just now</small></span><span><i className="landing-mini-avatar-alt">AR</i><small><strong>Alex</strong> linked a pull request · 1h ago</small></span></div>
             </div>
           </div>
         </div>
@@ -328,19 +315,19 @@ function LandingNav() {
   return (
     <header className="landing-nav">
       <div className="landing-nav-inner">
-        <Link className="landing-wordmark" href="/" aria-label="TaskFlow home"><BrandMark /><span>TaskFlow</span></Link>
+        <Link className="landing-wordmark" href="/" aria-label="TaskFlow home"><BrandMark className="landing-brand-mark" /><span>TaskFlow</span></Link>
         <nav className="landing-nav-links" aria-label="Main navigation">
           {navigation.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
         </nav>
         <div className="landing-nav-actions">
-          <Link className="landing-login-link" href="/login">Log in</Link>
-          <Link className="landing-button landing-button-small" href="/register">Get started <ArrowRight size={14} /></Link>
+          <Link className="landing-button landing-button-small landing-button-light" href="/login">Log in</Link>
+          <Link className="landing-button landing-button-small landing-button-light" href="/register">Get started <ArrowRight size={14} /></Link>
         </div>
         <button className="landing-mobile-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
-      {menuOpen && <nav className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
+      {menuOpen && <nav className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link className="landing-button landing-button-light" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button landing-button-light" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
     </header>
   );
 }
@@ -437,13 +424,13 @@ export function LandingPage() {
         <section className="landing-final-cta" aria-labelledby="final-cta-title">
           <div className="landing-cta-orbit landing-cta-orbit-one" />
           <div className="landing-cta-orbit landing-cta-orbit-two" />
-          <div className="landing-cta-content"><p className="landing-kicker">MAKE ROOM FOR GOOD WORK</p><h2 id="final-cta-title">Your next project<br /><span>deserves a better flow.</span></h2><p>Bring your projects, teammates, and development work into one focused space.</p><div className="landing-hero-actions"><Link className="landing-button" href="/register">Get started <ArrowRight size={16} /></Link><Link className="landing-secondary-button" href="/login">Log in to TaskFlow <span>↗</span></Link></div></div>
+          <div className="landing-cta-content"><p className="landing-kicker">MAKE ROOM FOR GOOD WORK</p><h2 id="final-cta-title">Your next project<br /><span>deserves a better flow.</span></h2><p>Bring your projects, teammates, and development work into one focused space.</p><div className="landing-hero-actions"><Link className="landing-button landing-button-light" href="/register">Get started <ArrowRight size={16} /></Link><Link className="landing-button landing-button-light" href="/login">Log in to TaskFlow <span>↗</span></Link></div></div>
           <div className="landing-cta-fragment"><div className="landing-cta-fragment-top"><span className="landing-green-dot" /> PROJECT STATUS <b>ON TRACK</b></div><strong>Website refresh</strong><div className="landing-progress"><span /></div><div className="flex items-center justify-between text-[10px] text-white/40"><span>8 of 12 tasks complete</span><AvatarStack small /></div></div>
         </section>
       </main>
       <footer className="landing-footer">
         <div className="landing-footer-main">
-          <div className="landing-footer-brand"><Link className="landing-wordmark" href="/"><BrandMark /><span>TaskFlow</span></Link><p>A focused workspace for projects, tasks, and the people building together.</p></div>
+          <div className="landing-footer-brand">          <Link className="landing-wordmark" href="/"><BrandMark className="landing-brand-mark" /><span>TaskFlow</span></Link><p>A focused workspace for projects, tasks, and the people building together.</p></div>
           <div className="landing-footer-links"><div><b>Explore</b><a href="#features">Features</a><a href="#workflow">Workflow</a><Link href="/developers/api">API docs</Link></div><div><b>Company</b><Link href="/about">About</Link><Link href="/contact">Contact</Link><Link href="/privacy">Privacy</Link></div><div><b>Get started</b><Link href="/login">Log in</Link><Link href="/register">Create an account</Link><a href="https://github.com/Code2With-Pratik/TaskFlow-App" target="_blank" rel="noreferrer">GitHub ↗</a></div></div>
         </div>
         <div className="landing-footer-bottom">        <span>© TaskFlow · Pratik Dhandare</span><span>Built for thoughtful teams.</span></div>
