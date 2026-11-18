@@ -44,7 +44,7 @@ export function AppSidebar({
       <IconHover>
         <Link
           className="flex h-[76px] items-center gap-3 px-6"
-          href="/dashboard"
+          href="/"
           onClick={onNavigate}
         >
           <span className="brand-mark grid size-9 place-items-center rounded-xl shadow-sm">

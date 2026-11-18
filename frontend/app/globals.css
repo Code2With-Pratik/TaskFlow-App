@@ -514,15 +514,18 @@ select:focus-visible,
   box-shadow: 0 4px 22px rgb(255 255 255 / 8%);
 }
 
-.landing-page a.landing-button {
+.landing-page a.landing-button,
+.landing-page button.landing-button {
   color: #080808;
 }
 
-.landing-page a.landing-button:not(.landing-login-button) svg {
+.landing-page a.landing-button:not(.landing-login-button) svg,
+.landing-page button.landing-button:not(.landing-login-button) svg {
   color: #080808;
 }
 
-.landing-page a.landing-login-button {
+.landing-page a.landing-login-button,
+.landing-page button.landing-login-button {
   border-color: #fff;
   background: #080808;
   color: #fff;
@@ -536,17 +539,20 @@ select:focus-visible,
   color: #080808;
 }
 
-.landing-page a.landing-button:hover {
+.landing-page a.landing-button:hover,
+.landing-page button.landing-button:hover {
   color: #080808;
 }
 
-.landing-page a.landing-login-button:hover {
+.landing-page a.landing-login-button:hover,
+.landing-page button.landing-login-button:hover {
   border-color: #d6d6d6;
   background: #202020;
   color: #fff;
 }
 
-.landing-page a.landing-login-button svg {
+.landing-page a.landing-login-button svg,
+.landing-page button.landing-login-button svg {
   color: #fff;
 }
 
@@ -571,6 +577,22 @@ select:focus-visible,
 .landing-mobile-toggle,
 .landing-mobile-menu {
   display: none;
+}
+
+.landing-logout-error {
+  position: absolute;
+  z-index: 21;
+  top: calc(100% + 0.5rem);
+  right: max(24px, calc((100% - 1200px) / 2));
+  max-width: min(24rem, calc(100vw - 2rem));
+  margin: 0;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 7px;
+  padding: 9px 12px;
+  background: #111;
+  color: #eee;
+  font-size: 11px;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 35%);
 }
 
 .landing-hero {

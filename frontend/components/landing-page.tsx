@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { useAuth } from "@/app/auth-provider";
+import { getErrorMessage } from "@/lib/api";
 import {
   ArrowRight,
   Bell,
@@ -312,6 +314,23 @@ function FeatureVisual({ type }: { type: string }) {
 
 function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { user, isLoading, signOut } = useAuth();
+
+  async function handleLogout() {
+    setLogoutError(null);
+    setIsLoggingOut(true);
+    try {
+      await signOut();
+      setMenuOpen(false);
+    } catch (error) {
+      setLogoutError(getErrorMessage(error));
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
+
   return (
     <header className="landing-nav">
       <div className="landing-nav-inner">
@@ -320,20 +339,56 @@ function LandingNav() {
           {navigation.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
         </nav>
         <div className="landing-nav-actions">
-          <Link className="landing-button landing-button-small landing-login-button" href="/login">Log in</Link>
-          <Link className="landing-button landing-button-small" href="/register">Get started <ArrowRight size={14} /></Link>
+          {!isLoading && user ? (
+            <>
+              <Link className="landing-button landing-button-small" href="/dashboard">Dashboard</Link>
+              <button
+                className="landing-button landing-button-small landing-login-button"
+                type="button"
+                disabled={isLoggingOut}
+                onClick={() => void handleLogout()}
+              >
+                {isLoggingOut ? "Logging out…" : "Log out"}
+              </button>
+            </>
+          ) : !isLoading ? (
+            <>
+              <Link className="landing-button landing-button-small landing-login-button" href="/login">Log in</Link>
+              <Link className="landing-button landing-button-small" href="/register">Get started <ArrowRight size={14} /></Link>
+            </>
+          ) : null}
         </div>
         <button className="landing-mobile-toggle" type="button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="landing-mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
-      {menuOpen && <nav id="landing-mobile-navigation" className="landing-mobile-menu" aria-label="Mobile navigation">{navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}<Link className="landing-button landing-login-button" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link><Link className="landing-button" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link></nav>}
+      {menuOpen && (
+        <nav id="landing-mobile-navigation" className="landing-mobile-menu" aria-label="Mobile navigation">
+          {navigation.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}
+          {!isLoading && user ? (
+            <>
+              <Link className="landing-button" href="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+              <button className="landing-button landing-login-button" type="button" disabled={isLoggingOut} onClick={() => void handleLogout()}>
+                {isLoggingOut ? "Logging out…" : "Log out"}
+              </button>
+            </>
+          ) : !isLoading ? (
+            <>
+              <Link className="landing-button landing-login-button" href="/login" onClick={() => setMenuOpen(false)}>Log in</Link>
+              <Link className="landing-button" href="/register" onClick={() => setMenuOpen(false)}>Get started <ArrowRight size={15} /></Link>
+            </>
+          ) : null}
+        </nav>
+      )}
+      {logoutError ? <p className="landing-logout-error" role="alert">{logoutError}</p> : null}
     </header>
   );
 }
 
 export function LandingPage() {
   const [activeTab, setActiveTab] = useState<ProductTab>("Projects");
+  const { user, isLoading } = useAuth();
+  const workspaceHref = user ? "/dashboard" : "/register";
 
   return (
     <div className="landing-page">
@@ -345,7 +400,7 @@ export function LandingPage() {
             <h1 id="landing-title">Your development workflow.<br /><span>One focused workspace.</span></h1>
             <p className="landing-hero-description">Plan projects, collaborate with your team, and connect your GitHub workflow — all in one beautifully organized workspace.</p>
             <div className="landing-hero-actions">
-              <Link className="landing-button" href="/register">Start building <ArrowRight size={16} /></Link>
+              <Link className="landing-button" href={workspaceHref}>{user ? "Open dashboard" : "Start building"} <ArrowRight size={16} /></Link>
               <a className="landing-secondary-button" href="#product">Explore the platform <span>↓</span></a>
             </div>
             <div className="landing-hero-note"><span className="landing-green-dot" /> A clear home for the work you care about.</div>
@@ -424,7 +479,7 @@ export function LandingPage() {
         <section className="landing-final-cta" aria-labelledby="final-cta-title">
           <div className="landing-cta-orbit landing-cta-orbit-one" />
           <div className="landing-cta-orbit landing-cta-orbit-two" />
-          <div className="landing-cta-content"><p className="landing-kicker">MAKE ROOM FOR GOOD WORK</p><h2 id="final-cta-title">Your next project<br /><span>deserves a better flow.</span></h2><p>Bring your projects, teammates, and development work into one focused space.</p><div className="landing-hero-actions"><Link className="landing-button" href="/register">Get started <ArrowRight size={16} /></Link><Link className="landing-button landing-login-button" href="/login">Log in to TaskFlow <span>↗</span></Link></div></div>
+          <div className="landing-cta-content"><p className="landing-kicker">MAKE ROOM FOR GOOD WORK</p><h2 id="final-cta-title">Your next project<br /><span>deserves a better flow.</span></h2><p>Bring your projects, teammates, and development work into one focused space.</p><div className="landing-hero-actions"><Link className="landing-button" href={workspaceHref}>{user ? "Open dashboard" : "Get started"} <ArrowRight size={16} /></Link>{!isLoading && !user ? <Link className="landing-button landing-login-button" href="/login">Log in to TaskFlow <span>↗</span></Link> : null}</div></div>
           <div className="landing-cta-fragment"><div className="landing-cta-fragment-top"><span className="landing-green-dot" /> PROJECT STATUS <b>ON TRACK</b></div><strong>Website refresh</strong><div className="landing-progress"><span /></div><div className="flex items-center justify-between text-[10px] text-white/40"><span>8 of 12 tasks complete</span><AvatarStack small /></div></div>
         </section>
       </main>
