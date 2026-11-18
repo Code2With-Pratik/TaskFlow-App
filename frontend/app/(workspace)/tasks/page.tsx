@@ -1,7 +1,13 @@
 "use client";
 
 import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "@/components/animated-icons";
-import { useDeferredValue, useState, useSyncExternalStore } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { IconHover } from "@/components/icon-hover";
 import { ErrorState, LoadingState } from "@/components/query-state";
@@ -50,11 +56,41 @@ export default function TasksPage() {
   const [selectedStatus, setSelectedStatus] = useState<TaskFilter | null>(null);
   const status = selectedStatus ?? routeStatus;
   const [search, setSearch] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const mobileFilterRef = useRef<HTMLDivElement>(null);
+  const mobileFilterTriggerRef = useRef<HTMLButtonElement>(null);
   const deferredSearch = useDeferredValue(search.trim());
   const [pagination, setPagination] = useState({ filterKey: "", page: 1 });
   const pageSize = 20;
   const filterKey = `${status}\u0000${deferredSearch}`;
   const page = pagination.filterKey === filterKey ? pagination.page : 1;
+
+  useEffect(() => {
+    if (!filterOpen) return;
+
+    function dismissOutside(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !mobileFilterRef.current?.contains(event.target)
+      ) {
+        setFilterOpen(false);
+      }
+    }
+
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setFilterOpen(false);
+        mobileFilterTriggerRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", dismissOutside);
+    document.addEventListener("keydown", dismissOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside);
+      document.removeEventListener("keydown", dismissOnEscape);
+    };
+  }, [filterOpen]);
 
   const query = useQuery({
     queryKey: ["tasks", status, deferredSearch, page],
@@ -88,20 +124,72 @@ export default function TasksPage() {
         description="A focused list of tasks from every project you belong to."
       />
       <section aria-label="Task filters" className="mb-5 flex flex-col gap-3 sm:flex-row">
-        <IconHover>
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
-            <Input
-              className="pl-9"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search task titles and descriptions"
-              aria-label="Search tasks"
-            />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <IconHover>
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+              <Input
+                className="pl-9"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search task titles and descriptions"
+                aria-label="Search tasks"
+              />
+            </div>
+          </IconHover>
+          <div className="relative sm:hidden" ref={mobileFilterRef}>
+            <button
+              ref={mobileFilterTriggerRef}
+              type="button"
+              className="task-filter-trigger"
+              aria-label={`Filter tasks. Current filter: ${statuses.find((item) => item.value === status)?.label ?? "All tasks"}`}
+              aria-expanded={filterOpen}
+              aria-haspopup="true"
+              aria-controls="mobile-task-status-filters"
+              onClick={() => setFilterOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={17} aria-hidden="true" />
+              {status !== "ALL" ? <span className="task-filter-indicator" aria-hidden="true" /> : null}
+            </button>
+            {filterOpen ? (
+              <div
+                id="mobile-task-status-filters"
+                className="task-filter-menu"
+                role="group"
+                aria-label="Task status filters"
+              >
+                {statuses.map((item) => (
+                  <button
+                    key={item.value}
+                    className={`task-filter-option ${
+                      status === item.value ? "task-filter-option-selected" : ""
+                    }`}
+                    aria-pressed={status === item.value}
+                    onClick={() => {
+                      setSelectedStatus(item.value);
+                      setFilterOpen(false);
+                      mobileFilterTriggerRef.current?.focus();
+                    }}
+                    type="button"
+                  >
+                    <span className="flex items-center">
+                      {item.tone ? (
+                        <span
+                          aria-hidden="true"
+                          className={`mr-2 inline-block size-1.5 rounded-full ${item.tone}`}
+                        />
+                      ) : null}
+                      {item.label}
+                    </span>
+                    {status === item.value ? <CheckCircle2 size={14} aria-hidden="true" /> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
-        </IconHover>
+        </div>
         <IconHover>
-          <div className="scrollbar-hidden flex items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1" role="group" aria-label="Task status filters" tabIndex={0}>
+          <div className="scrollbar-hidden hidden items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1 sm:flex" role="group" aria-label="Task status filters" tabIndex={0}>
             <SlidersHorizontal className="ml-2 shrink-0 text-muted" size={15} />
             {statuses.map((item) => (
               <button
