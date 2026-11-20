@@ -67,7 +67,7 @@ export default function TasksPage() {
   useEffect(() => {
     const timeout = window.setTimeout(
       () => setDebouncedSearch(search.trim()),
-      300,
+      100,
     );
     return () => window.clearTimeout(timeout);
   }, [search]);

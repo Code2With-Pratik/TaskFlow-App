@@ -150,14 +150,16 @@ export class TasksService {
         : {}),
     };
 
-    const tasks = await this.prisma.task.findMany({
-      where,
-      include: taskRelations,
-      orderBy: [{ dueDate: 'asc' }, { updatedAt: 'desc' }],
-      skip: (filters.page - 1) * filters.limit,
-      take: filters.limit,
-    });
-    const total = await this.prisma.task.count({ where });
+    const [tasks, total] = await Promise.all([
+      this.prisma.task.findMany({
+        where,
+        include: taskRelations,
+        orderBy: [{ dueDate: 'asc' }, { updatedAt: 'desc' }],
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      this.prisma.task.count({ where }),
+    ]);
 
     return {
       data: tasks.map(serializeTask),
