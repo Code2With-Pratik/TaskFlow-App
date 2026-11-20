@@ -2,7 +2,6 @@
 
 import { CheckCircle2, ListTodo, Search, SlidersHorizontal } from "@/components/animated-icons";
 import {
-  useDeferredValue,
   useEffect,
   useRef,
   useState,
@@ -59,11 +58,19 @@ export default function TasksPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const mobileFilterRef = useRef<HTMLDivElement>(null);
   const mobileFilterTriggerRef = useRef<HTMLButtonElement>(null);
-  const deferredSearch = useDeferredValue(search.trim());
+  const [debouncedSearch, setDebouncedSearch] = useState(search.trim());
   const [pagination, setPagination] = useState({ filterKey: "", page: 1 });
   const pageSize = 20;
-  const filterKey = `${status}\u0000${deferredSearch}`;
+  const filterKey = `${status}\u0000${debouncedSearch}`;
   const page = pagination.filterKey === filterKey ? pagination.page : 1;
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      300,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     if (!filterOpen) return;
@@ -93,22 +100,19 @@ export default function TasksPage() {
   }, [filterOpen]);
 
   const query = useQuery({
-    queryKey: ["tasks", status, deferredSearch, page],
-    queryFn: () => {
+    queryKey: ["tasks", status, debouncedSearch, page],
+    queryFn: ({ signal }) => {
       const params = new URLSearchParams({
         limit: String(pageSize),
         page: String(page),
       });
       if (status === "OVERDUE") params.set("overdue", "true");
       else if (status !== "ALL") params.set("status", status);
-      if (deferredSearch) params.set("search", deferredSearch);
-      return apiFetch<PaginatedTasks>(`/tasks?${params.toString()}`);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return apiFetch<PaginatedTasks>(`/tasks?${params.toString()}`, { signal });
     },
     placeholderData: (previousData, previousQuery) =>
-      previousQuery?.queryKey[1] === status &&
-      previousQuery.queryKey[2] === deferredSearch
-        ? previousData
-        : undefined,
+      previousQuery?.queryKey[1] === status ? previousData : undefined,
   });
 
   if (query.isLoading) return <LoadingState label="Loading your tasks…" />;
